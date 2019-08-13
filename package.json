@@ -1,0 +1,55 @@
+{
+  "name": "node-veracity-auth",
+  "version": "0.0.1",
+  "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rimraf lib && tsc --build tsconfig.json",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/veracity/node-veracity-auth.git"
+  },
+  "files": [
+    "lib/"
+  ],
+  "keywords": [
+    "veracity",
+    "authentication",
+    "openid"
+  ],
+  "author": "Veracity",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/veracity/node-veracity-auth/issues"
+  },
+  "homepage": "https://github.com/veracity/node-veracity-auth#readme",
+  "devDependencies": {
+    "@types/express-session": "^1.15.13",
+    "@types/jest": "^24.0.17",
+    "@types/lodash.omit": "^4.5.6",
+    "@types/nanoid": "^2.0.0",
+    "@types/node": "^12.7.1",
+    "@types/request-promise": "^4.1.44",
+    "jest": "^24.8.0",
+    "lodash.omit": "^4.5.0",
+    "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "base64url": "^3.0.1",
+    "nanoid": "^2.0.3",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "bail": 1
+  }
+}

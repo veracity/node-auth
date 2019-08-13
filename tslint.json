@@ -1,0 +1,28 @@
+{
+	"defaultSeverity": "error",
+	"extends": [
+			"tslint:latest"
+	],
+	"linterOptions": {
+		"exclude": [
+			"**/*.json",
+			"**/*.js"
+		]
+	},
+	"jsRules": {},
+	"rules": {
+		"indent": [true, "tabs", 2],
+		"variable-name": [true, "allow-leading-underscore", "ban-keywords", "check-format", "allow-pascal-case"],
+		"curly": [true, "ignore-same-line"],
+		"trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
+		"semicolon": [true, "never"],
+		"no-submodule-imports": [false],
+		"object-literal-sort-keys": [false],
+		"whitespace": [true, "check-module"],
+		"no-implicit-dependencies": [false],
+		"no-var-requires": [false],
+		"ordered-imports": [true],
+		"no-empty-interface": [false],
+		"no-console": [false]
+	}
+}
