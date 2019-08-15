@@ -3,8 +3,6 @@
  */
 export interface IVeracityJWK {
 	kid: string
-	use: string
-	kty: string
 	e: string
 	n: string
 }

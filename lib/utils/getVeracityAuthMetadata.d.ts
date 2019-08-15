@@ -1,4 +1,4 @@
-import { IVeracityAuthMetadataWithJWKs } from "./interfaces/IVeracityAuthMetadata";
+import { IVeracityAuthMetadataWithJWKs } from "../interfaces";
 export interface IVeracityMetadataOptions {
     /**
      * The id of the B2C tenant used for Veracity authentication.
@@ -14,4 +14,5 @@ export interface IVeracityMetadataOptions {
  * proper public keys for it.
  * @param options
  */
-export declare const getMetadata: (options: IVeracityMetadataOptions) => Promise<IVeracityAuthMetadataWithJWKs>;
+export declare const getVeracityAuthMetadata: (options: IVeracityMetadataOptions) => Promise<IVeracityAuthMetadataWithJWKs>;
+export default getVeracityAuthMetadata;

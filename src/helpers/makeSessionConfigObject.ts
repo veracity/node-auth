@@ -29,7 +29,10 @@ const recommendedSessionOptions = {
  *
  * Usage:
  * const session = require("express-session")
- * app.use(session(configureExpressSession()))
+ * app.use(session(configureExpressSession({ ... })))
+ *
+ * @param options
+ * @returns A configuration object for express-session.
  */
 export const makeSessionConfigObject = (options: IMakeSessionConfigObjectOptions & SessionOptions) => {
 	const fullOptions = {

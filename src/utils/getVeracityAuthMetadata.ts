@@ -1,6 +1,6 @@
-import request from "request-promise"
 import { IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../interfaces"
 import { generatePEM } from "./generatePEM"
+import request from "./request"
 
 export interface IVeracityMetadataOptions {
 	/**
