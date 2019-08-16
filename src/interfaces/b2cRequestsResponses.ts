@@ -44,8 +44,13 @@ export interface IB2CAuthorizationCodeExchangeResponseSuccess {
 	token_type: "Bearer"
 	access_token: string
 	expires_in: string
+	expires_on: string
+	id_token: string
+	id_token_expires_in: string
+	profile_info: string
 	refresh_token?: string
 	refresh_token_expires_in?: string
+	resource: string
 }
 /**
  * Describes a failed authorization code exchange response.
@@ -81,15 +86,15 @@ export interface IB2CAccessTokenRequestParameters {
 	redirect_uri: string
 }
 
-export const isB2CLoginResponse = (obj: any): obj is IB2CLoginResponseSuccess => (
+export const isB2CLoginResponse = (obj: any): obj is IB2CLoginResponseSuccess => !!(
 	obj.id_token && obj.code && obj.state
 )
-export const isB2CAuthorizationCodeExchangeResponse = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseSuccess => (
+export const isB2CAuthorizationCodeExchangeResponse = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseSuccess => !!(
 	obj.not_before && obj.token_type && obj.access_token && obj.expires_in
 )
-export const isB2CLoginResponseFailure = (obj: any): obj is IB2CLoginResponseFailure => (
+export const isB2CLoginResponseFailure = (obj: any): obj is IB2CLoginResponseFailure => !!(
 	obj.error && obj.error_description && obj.state
 )
-export const isB2CResponseFailure = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseFailure => (
+export const isB2CResponseFailure = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseFailure => !!(
 	obj.error && obj.error_description
 )

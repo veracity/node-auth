@@ -1,4 +1,4 @@
-import { IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../interfaces"
+import { IVeracityAuthFlowStrategySettings, IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../interfaces"
 import { generatePEM } from "./generatePEM"
 import request from "./request"
 
@@ -38,4 +38,40 @@ export const getVeracityAuthMetadata =
 	}
 }
 
-export default getVeracityAuthMetadata
+/**
+ * A memoized version of the auth metadata function that stores the metadata for a configured number of seconds.
+ */
+export const getCachedVeracityAuthMetadata = (() => {
+	let metadataStore: {
+		metadata?: IVeracityAuthMetadataWithJWKs
+		keepUntil?: number
+	} = {}
+
+	const invalidateMetadata = () => {
+		if (!metadataStore.metadata) return
+		if (!metadataStore.keepUntil) return
+
+		if (Date.now() > metadataStore.keepUntil) {
+			metadataStore = {}
+		}
+	}
+
+	return async (parameters: Pick<IVeracityAuthFlowStrategySettings, "tenantId" | "policy" | "configuration">) => {
+		invalidateMetadata()
+		if (metadataStore.metadata) {
+			return metadataStore.metadata
+		}
+
+		const metadata = await getVeracityAuthMetadata(parameters)
+		if (parameters.configuration && parameters.configuration.keepMetadataFor) {
+			metadataStore = {
+				metadata,
+				keepUntil: Date.now() + (parameters.configuration.keepMetadataFor * 1000)
+			}
+		}
+
+		return metadata
+	}
+})()
+
+export default getCachedVeracityAuthMetadata

@@ -38,16 +38,16 @@ export const validateIDToken = (validationOptions: IValidationOptions) => {
 		throw new Error("The token is not comprised of the expected 3 segments separated by a period.")
 	}
 
-	const decodedIDToken: IVeracityIDToken | undefined = jwt.decode(idToken, { complete: true }) as any
-	if (!decodedIDToken) throw new Error("The id token is not formatted as a known JWT token. It could not be decoded.")
+	const idTokenDecoded: IVeracityIDToken | undefined = jwt.decode(idToken, { complete: true }) as any
+	if (!idTokenDecoded) throw new Error("The id token is not formatted as a known JWT token. It could not be decoded.")
 
-	if (!decodedIDToken.header) throw new Error("The id token header is missing")
-	if (!decodedIDToken.payload) throw new Error("The id token payload is missing")
-	if (!decodedIDToken.signature) throw new Error("The id token signature is missing")
+	if (!idTokenDecoded.header) throw new Error("The id token header is missing")
+	if (!idTokenDecoded.payload) throw new Error("The id token payload is missing")
+	if (!idTokenDecoded.signature) throw new Error("The id token signature is missing")
 
-	const idTokenJWK = jwks.find((jwk) => jwk.kid === decodedIDToken.header.kid)
+	const idTokenJWK = jwks.find((jwk) => jwk.kid === idTokenDecoded.header.kid)
 	if (!idTokenJWK) {
-		throw new Error(`ID token expected key with kid=${decodedIDToken.header.kid} but no such key was found in metadata.`)
+		throw new Error(`ID token expected key with kid=${idTokenDecoded.header.kid} but no such key was found in metadata.`)
 	}
 
 	// Verify id token
@@ -65,7 +65,7 @@ export const validateIDToken = (validationOptions: IValidationOptions) => {
 
 	return {
 		idToken,
-		decodedIDToken
+		idTokenDecoded
 	}
 }
 /**
@@ -75,44 +75,44 @@ export const validateIDToken = (validationOptions: IValidationOptions) => {
  */
 export const validateIDTokenAndAuthorizationCode = (
 	authorizationCode: string, validationOptions: IValidationOptions) => {
-	const {decodedIDToken} = validateIDToken(validationOptions)
-	if (!decodedIDToken.payload.c_hash) {
+	const {idTokenDecoded} = validateIDToken(validationOptions)
+	if (!idTokenDecoded.payload.c_hash) {
 		throw new Error("Expected c_hash claim on the id token, but it was not present. Cannot verify authorization code.")
 	}
-	if (!validateTokenHash(authorizationCode, decodedIDToken.payload.c_hash)) {
+	if (!validateTokenHash(authorizationCode, idTokenDecoded.payload.c_hash)) {
 		throw new Error("Authorization code hash did not match expected value from c_hash claim on id token.")
 	}
-	return decodedIDToken
+	return idTokenDecoded
 }
 /**
  * Validates an id token and the associated access token.
  * @param accessToken
  * @param validationOptions
  */
-export const validateIDTokenAndAccessCode = (
+export const validateIDTokenAndAccessToken = (
 	accessToken: string, validationOptions: IValidationOptions) => {
 	const {idToken, issuer, nonce, jwks} = validationOptions
 
-	const {decodedIDToken} = validateIDToken(validationOptions)
-	if (!decodedIDToken.payload.at_hash) {
+	const {idTokenDecoded} = validateIDToken(validationOptions)
+	if (!idTokenDecoded.payload.at_hash) {
 		throw new Error("Expected at_hash claim on the id token, but it was not present. Cannot verify access token.")
 	}
-	if (!validateTokenHash(accessToken, decodedIDToken.payload!.at_hash)) {
+	if (!validateTokenHash(accessToken, idTokenDecoded.payload!.at_hash)) {
 		throw new Error("Access token hash did not match expected value from at_hash claim on id token.")
 	}
 
-	const decodedAccessToken: IVeracityAccessToken | undefined = jwt.decode(accessToken, { complete: true }) as any
-	if (!decodedAccessToken) {
+	const accessTokenDecoded: IVeracityAccessToken | undefined = jwt.decode(accessToken, { complete: true }) as any
+	if (!accessTokenDecoded) {
 		throw new Error("The access token is not formatted as a known JWT token. It could not be decoded.")
 	}
 
-	if (!decodedAccessToken.header) throw new Error("The id token header is missing")
-	if (!decodedAccessToken.payload) throw new Error("The id token payload is missing")
-	if (!decodedAccessToken.signature) throw new Error("The id token signature is missing")
+	if (!accessTokenDecoded.header) throw new Error("The id token header is missing")
+	if (!accessTokenDecoded.payload) throw new Error("The id token payload is missing")
+	if (!accessTokenDecoded.signature) throw new Error("The id token signature is missing")
 
-	const accessTokenJWK = jwks.find((jwk) => jwk.kid === decodedAccessToken.header.kid)
+	const accessTokenJWK = jwks.find((jwk) => jwk.kid === accessTokenDecoded.header.kid)
 	if (!accessTokenJWK) {
-		throw new Error(`Access token expected key with kid=${decodedAccessToken.header.kid} `+
+		throw new Error(`Access token expected key with kid=${accessTokenDecoded.header.kid} `+
 			`but no such key was found in metadata.`)
 	}
 
@@ -130,8 +130,8 @@ export const validateIDTokenAndAccessCode = (
 
 	return {
 		idToken,
-		decodedIDToken,
+		idTokenDecoded,
 		accessToken,
-		decodedAccessToken
+		accessTokenDecoded
 	}
 }

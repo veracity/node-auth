@@ -34,10 +34,16 @@ export class SessionWrapper<DataType = {[key: string]: any}> {
 		this.req.session![this.fullName] = newData
 	}
 	/**
-	 * Removes all session data within the namespace of this wrapper.
+	 * Clears all session data within the namespace of this wrapper.
 	 * Does not destroy the session.
 	 */
 	public clear() {
 		this.req.session![this.fullName] = {}
+	}
+	/**
+	 * Removes the entire namespace for this wrapper from the session object.
+	 */
+	public destroyNamespace() {
+		delete this.req.session![this.fullName]
 	}
 }

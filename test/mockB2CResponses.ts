@@ -1,5 +1,9 @@
 // tslint:disable: max-line-length
-import { IVeracityAuthMetadata, IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../src/interfaces"
+import {
+	IVeracityAuthMetadata,
+	IVeracityAuthMetadataWithJWKs,
+	IVeracityJWKWithPEM
+} from "../src/interfaces"
 import { mockAuthFlowStrategySettings } from "./mockAuthFlowStrategySettings"
 
 const {tenantId, policy} = mockAuthFlowStrategySettings
@@ -83,12 +87,4 @@ wwF3qTRXGAX9KrwY4huRxDRslMIg30HqgwIDAQAB
 export const mockFullMetadata: IVeracityAuthMetadataWithJWKs = {
 	...mockMetaResponse,
 	jwks: mockJWKResponse.keys
-}
-
-export const mockLoginResponseBody = (state) => ({
-
-	state
-})
-export const mockAccessTokenResponseBody = {
-
 }

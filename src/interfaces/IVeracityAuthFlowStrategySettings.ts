@@ -1,5 +1,3 @@
-import { IVeracityAuthFlowStrategyVerifierOptions } from "./IVeracityAuthFlowStrategyVerifierOptions"
-
 export interface IVeracityAuthFlowStrategySettings {
 	/**
 	 * The id of the Veracity tenant you are authenticating with.
@@ -33,11 +31,6 @@ export interface IVeracityAuthFlowStrategySettings {
 	 * If you only wish to authenticate with Veracity you can ignore this setting.
 	 */
 	apiScopes?: string[]
-
-	/**
-	 * A function that receives all the final tokens and data.
-	 */
-	verifier: (options: IVeracityAuthFlowStrategyVerifierOptions) => void | Promise<void>
 
 	/**
 	 * Contains configuration for strategy internals.

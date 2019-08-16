@@ -5,6 +5,16 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "TS Node express-test",
+			"type": "node",
+			"request": "launch",
+			"args": ["${workspaceFolder}/src/localtest/express-test.ts"],
+			"runtimeArgs": ["-r", "ts-node/register"],
+			"cwd": "${fileDirname}",
+			"protocol": "inspector",
+			"outputCapture": "std",
+		},
+		{
 			"name": "Debug Tests",
 			"type": "node",
 			"request": "launch",

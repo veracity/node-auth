@@ -16,7 +16,7 @@ export interface IVeracityAuthFlowVerifierOptions {
  *
  * It supports negotiating for multiple access tokens for different services (api scopes).
  */
-export class VeracityStrategy<TUser = any> implements Strategy {
+export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 
 	/**
 	 * Used for internal calls to the methods provided by PassportJs.
@@ -43,21 +43,14 @@ export class VeracityStrategy<TUser = any> implements Strategy {
 
 		try {
 			const context = new VeracityAuthFlowStrategyContext(req, this.settings)
-			try {
-				const nextResult = await context.next()
-				if (!nextResult) {
-					await this.verifier({
-							idToken: context.idToken,
-							apiTokens: context.readyTokens
-						}, this.done)
-				} else {
-					this.self.redirect(nextResult)
-				}
-			} catch (error) {
-				this.self.error(error)
-			} finally {
-				context.cleanUp()
+			const nextResult = await context.next()
+			if (!nextResult) {
+				return this.verifier({
+						idToken: context.idToken!,
+						apiTokens: context.readyTokens
+					}, this.done.bind(this))
 			}
+			this.self.redirect(nextResult)
 		} catch (error) {
 			this.self.error(error)
 		}
@@ -66,7 +59,7 @@ export class VeracityStrategy<TUser = any> implements Strategy {
 	/**
 	 * The done function to send to the verifier once the request authentication process completes successfully.
 	 */
-	private done = (err: any, user: TUser | null, info?: any) => {
+	private done(err: any, user: TUser | null, info?: any) {
 		if (err) return this.self.error(err)
 		if (!user) return this.self.fail(info)
 		this.self.success(user as any, info)

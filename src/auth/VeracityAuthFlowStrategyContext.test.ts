@@ -114,19 +114,4 @@ describe("VeracityAuthFlowStrategyContext", () => {
 			expect(nextResult).toEqual(`https://login.microsoftonline.com/dummy-tenant-id/oauth2/v2.0/authorize?p=dummy-policy&client_id=dummy-client-id&redirect_uri=https%3A%2F%2Fdummy-redirect-uri.com&response_type=code%20id_token&response_mode=form_post&scope=openid%20offline_access%20mock-scope-1&state=${context.state}&nonce=${context.nonce}`)
 		})
 	})
-	describe("login return state", () => {
-		beforeEach(() => {
-			const sessionData: IVeracityAuthFlowSessionData = {
-				lastIdToken: undefined,
-				lastIdTokenDecoded: undefined,
-				metadata: mockFullMetadata,
-				state: "dummy-state",
-				nonce: "dummy-nonce"
-			} as any
-			mockRequest.body = {}
-			mockRequest.session.veracity_session_authflow = {
-			}
-		})
-		test("")
-	})
 })
