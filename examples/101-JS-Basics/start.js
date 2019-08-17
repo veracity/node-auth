@@ -8,14 +8,14 @@ const generateCerts = require("./generateCerts") // Helps us generate self-signe
 const credentials = require("./credentials") // Get the secret credentials for our application
 
 // Imports the helper function that will aid us in setting up everything needed to authenticate
-const {setupAuthFlowStrategy} = require("@veracity/node-auth/lib/helpers/setupAuthFlowStrategy")
+const {helpers} = require("@veracity/node-auth")
 
 // Create the application instance for our express application
 const app = express()
 
 // Now we use the helper function provided by @veracity/node-auth to configure our application to allow
 // authenticating with the Veracity Identity Provider
-setupAuthFlowStrategy({
+helpers.setupAuthFlowStrategy({
 	appOrRouter: app, // The helper will configure out app so we need to provide the instance
 	loginPath: "/login", // Where will users go to log in
 	strategySettings: { // These are settings for the passport strategy we use to authenticate with Veracity
@@ -48,7 +48,7 @@ setupAuthFlowStrategy({
 
 // Set up a handler on the root of our application so we can see that it's working.
 app.get("/", (req, res) => {
-	res.send("Hello world")
+	res.send(`Click <a href="/login"/>here</a> to log in`)
 })
 
 

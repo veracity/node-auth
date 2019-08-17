@@ -23,3 +23,4 @@ export declare class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
      */
     private done;
 }
+export default VeracityAuthFlowStrategy;

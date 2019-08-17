@@ -26,7 +26,23 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 	public constructor(
 		private settings: IVeracityAuthFlowStrategySettings,
 		private verifier: VerifierFunction<TUser>
-	) { }
+	) {
+		if (!settings.tenantId) {
+			throw new Error("The tenantId setting is required.")
+		}
+		if (!settings.policy) {
+			throw new Error("The policy setting is required.")
+		}
+		if (!settings.clientId) {
+			throw new Error("The clientId setting is required.")
+		}
+		if (!settings.clientSecret) {
+			throw new Error("The clientSecret setting is required.")
+		}
+		if (!settings.redirectUri) {
+			throw new Error("The redirectUri setting is required.")
+		}
+	}
 
 	public async authenticate(req: Request, options?: any) {
 		if (!req.session) {
@@ -60,3 +76,5 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		this.self.success(user as any, info)
 	}
 }
+
+export default VeracityAuthFlowStrategy

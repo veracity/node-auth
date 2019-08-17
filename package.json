@@ -2,7 +2,7 @@
   "name": "@veracity/node-auth",
   "version": "0.0.1",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
-  "main": "./lib",
+  "main": "./lib/index.js",
   "scripts": {
     "build": "rimraf lib && tsc --build tsconfig.json",
     "test": "jest",
