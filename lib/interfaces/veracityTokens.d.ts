@@ -3,49 +3,39 @@ export interface IVeracityTokenHeader {
     alg: string;
     kid: string;
 }
-export interface IVeracityIDTokenPayload {
-    exp: number;
-    nbf: number;
-    ver: "1.0";
+interface ICommonClaims {
     iss: string;
     sub: "Not supported currently. Use oid claim.";
     aud: string;
-    acr: string;
-    nonce: string;
+    exp: number;
+    nbf: number;
     iat: number;
-    auth_time: number;
-    userId: string;
+    email: string[];
+    nonce: string;
     given_name: string;
     family_name: string;
     name: string;
-    dnvglAccountName: string;
-    myDnvglGuid: string;
-    oid: string;
-    email: string[];
-    upn: string;
+    ver: "1.0";
+}
+export interface IVeracityIDTokenPayload extends ICommonClaims {
     c_hash?: string;
     at_hash?: string;
-}
-export interface IVeracityAccessTokenPayload {
-    iss: string;
-    exp: number;
-    nbf: number;
-    aud: string;
+    acr: string;
+    auth_time: number;
     userId: string;
-    given_name: string;
-    family_name: string;
-    name: string;
     dnvglAccountName: string;
     myDnvglGuid: string;
-    sub: "Not supported currently. Use oid claim.";
     oid: string;
-    email: string[];
     upn: string;
-    nonce: string;
-    scp: string;
+}
+export interface IVeracityAccessTokenPayload extends ICommonClaims {
     azp: string;
-    ver: "1.0";
-    iat: number;
+    userId: string;
+    dnvglAccountName: string;
+    myDnvglGuid: string;
+    oid: string;
+    upn: string;
+    scp: string;
 }
 export interface IVeracityIDToken {
     header: IVeracityTokenHeader;
@@ -57,3 +47,4 @@ export interface IVeracityAccessToken {
     payload: IVeracityAccessTokenPayload;
     signature: string;
 }
+export {};

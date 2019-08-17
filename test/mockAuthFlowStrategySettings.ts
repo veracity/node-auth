@@ -11,7 +11,6 @@ export const mockAuthFlowStrategySettings: IVeracityAuthFlowStrategySettings = {
 		"mock-scope-1",
 		"mock-scope-2"
 	],
-	verifier: jest.fn() as any,
 	configuration: {
 		keepMetadataFor: 120
 	}

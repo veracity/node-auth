@@ -27,7 +27,7 @@ export interface IValidationOptions {
  */
 export declare const validateIDToken: (validationOptions: IValidationOptions) => {
     idToken: string;
-    decodedIDToken: IVeracityIDToken;
+    idTokenDecoded: IVeracityIDToken;
 };
 /**
  * Validates an id token and the associated authorization code.
@@ -40,9 +40,9 @@ export declare const validateIDTokenAndAuthorizationCode: (authorizationCode: st
  * @param accessToken
  * @param validationOptions
  */
-export declare const validateIDTokenAndAccessCode: (accessToken: string, validationOptions: IValidationOptions) => {
+export declare const validateIDTokenAndAccessToken: (accessToken: string, validationOptions: IValidationOptions) => {
     idToken: string;
-    decodedIDToken: IVeracityIDToken;
+    idTokenDecoded: IVeracityIDToken;
     accessToken: string;
-    decodedAccessToken: IVeracityAccessToken;
+    accessTokenDecoded: IVeracityAccessToken;
 };

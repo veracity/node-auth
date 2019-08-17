@@ -1,4 +1,4 @@
-import { IVeracityAuthMetadataWithJWKs } from "../interfaces";
+import { IVeracityAuthFlowStrategySettings, IVeracityAuthMetadataWithJWKs } from "../interfaces";
 export interface IVeracityMetadataOptions {
     /**
      * The id of the B2C tenant used for Veracity authentication.
@@ -15,4 +15,8 @@ export interface IVeracityMetadataOptions {
  * @param options
  */
 export declare const getVeracityAuthMetadata: (options: IVeracityMetadataOptions) => Promise<IVeracityAuthMetadataWithJWKs>;
-export default getVeracityAuthMetadata;
+/**
+ * A memoized version of the auth metadata function that stores the metadata for a configured number of seconds.
+ */
+export declare const getCachedVeracityAuthMetadata: (parameters: Pick<IVeracityAuthFlowStrategySettings, "tenantId" | "policy" | "configuration">) => Promise<IVeracityAuthMetadataWithJWKs>;
+export default getCachedVeracityAuthMetadata;

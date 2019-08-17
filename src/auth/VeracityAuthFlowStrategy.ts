@@ -1,14 +1,10 @@
 import { Request } from "express"
 import { Strategy, StrategyCreatedStatic } from "passport"
 import {
-	IVeracityAuthFlowStrategySettings, IVeracityIDTokenPayload, IVeracityTokenData
+	IVeracityAuthFlowStrategySettings,
+	VerifierFunction
 } from "../interfaces"
 import { VeracityAuthFlowStrategyContext } from "./VeracityAuthFlowStrategyContext"
-
-export interface IVeracityAuthFlowVerifierOptions {
-	idToken: IVeracityIDTokenPayload
-	apiTokens?: {[apiScope: string]: IVeracityTokenData}
-}
 
 /**
  * Defines a strategy for authenticating with Veracity and aquiring access tokens using the
@@ -29,9 +25,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 
 	public constructor(
 		private settings: IVeracityAuthFlowStrategySettings,
-		private verifier: (
-			options: IVeracityAuthFlowVerifierOptions,
-			done: (err: any, user: TUser | null, info?: any) => void) => void | Promise<void>
+		private verifier: VerifierFunction<TUser>
 	) { }
 
 	public async authenticate(req: Request, options?: any) {
@@ -47,6 +41,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			if (!nextResult) {
 				return this.verifier({
 						idToken: context.idToken!,
+						idTokenDecoded: context.idTokenDecoded!,
 						apiTokens: context.readyTokens
 					}, this.done.bind(this))
 			}

@@ -4,7 +4,7 @@ import { IVeracityAccessTokenPayload, IVeracityIDTokenPayload } from "./veracity
  */
 export interface IVeracityTokenData {
     /**
-     * The associated scope of this token
+     * The associated scope of this token.
      */
     scope: string;
     /**
@@ -12,31 +12,31 @@ export interface IVeracityTokenData {
      */
     idToken: string;
     /**
-     * The decoded id token (header and signature not included)
+     * The decoded id token (header and signature not included).
      */
     idTokenDecoded: IVeracityIDTokenPayload;
     /**
-     * The full access token
+     * The full access token.
      */
     accessToken: string;
     /**
-     * The decoded access token payload (header and signature not included)
+     * The decoded access token payload (header and signature not included).
      */
     accessTokenDecoded: IVeracityAccessTokenPayload;
     /**
-     * The epoch timestamp when the access token expires
+     * The epoch timestamp when the access token expires.
      */
     accessTokenExpires: number;
     /**
-     * The lifetime of the access token in milliseconds
+     * The lifetime of the access token in milliseconds.
      */
     accessTokenLifetime: number;
     /**
-     * The opaque refresh token if offline_access scope was provided
+     * The opaque refresh token if offline_access scope was provided.
      */
     refreshToken?: string;
     /**
-     * The epoch timestamp when the refresh token expires if refresh token is present
+     * The epoch timestamp when the refresh token expires if refresh token is present.
      */
     refreshTokenExpires?: number;
 }

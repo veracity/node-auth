@@ -1,19 +1,19 @@
 import { Request } from "express"
 import {
-	IB2CAccessTokenRequestParameters,
-	IB2CAuthorizationCodeExchangeResponseFailure,
-	IB2CAuthorizationCodeExchangeResponseSuccess,
-	IB2CLoginRequestParamaters,
-	IB2CLoginResponseFailure,
-	IB2CLoginResponseSuccess,
-	isB2CLoginResponse,
-	isB2CResponseFailure,
+	isVIDPLoginResponse,
+	isVIDPResponseFailure,
 	IVeracityAccessToken,
-	IVeracityAuthFlowSessionData,
 	IVeracityAuthFlowStrategySettings,
+	IVeracityAuthMetadataWithJWKs,
 	IVeracityIDToken,
 	IVeracityIDTokenPayload,
-	IVeracityTokenData
+	IVeracityTokenData,
+	IVIDPAccessTokenRequestParameters,
+	IVIDPAuthorizationCodeExchangeResponseFailure,
+	IVIDPAuthorizationCodeExchangeResponseSuccess,
+	IVIDPLoginRequestParamaters,
+	IVIDPLoginResponseFailure,
+	IVIDPLoginResponseSuccess
 } from "../interfaces"
 import {
 	createUid,
@@ -25,7 +25,22 @@ import {
 	validateIDTokenAndAuthorizationCode
 } from "../utils"
 import { combineParams, encodeURIParams } from "../utils/uriParams"
-import { B2CError } from "./B2CError"
+import { VIDPError } from "./errors/VIDPError"
+
+export interface IVeracityAuthFlowSessionData {
+	metadata: IVeracityAuthMetadataWithJWKs
+	state: string
+	nonce: string
+	/**
+	 * The scope that is currently being authenticated.
+	 */
+	apiScope?: string
+
+	/**
+	 * All access tokens that have been negotiated and validated.
+	 */
+	tokens?: {[scope: string]: IVeracityTokenData}
+}
 
 /**
  * Helper class for managing the current authentication context.
@@ -46,10 +61,16 @@ export class VeracityAuthFlowStrategyContext {
 	}
 
 	/**
-	 * Returns the last resolved id token.
+	 * Returns the last resolved id token string.
 	 */
 	public get idToken() {
 		return this._idToken
+	}
+	/**
+	 * Returns the last resolved id tokens decoded payload.
+	 */
+	public get idTokenDecoded() {
+		return this._idTokenDecoded
 	}
 	/**
 	 * Returns an object keyed by api scope that contains all ready access tokens and related information.
@@ -78,7 +99,7 @@ export class VeracityAuthFlowStrategyContext {
 	 * Returns all parameters needed to redirect the user to a B2C for login.
 	 * The parameters will remain the same for the lifetime of this instance.
 	 */
-	private get loginParams(): IB2CLoginRequestParamaters {
+	private get loginParams(): IVIDPLoginRequestParamaters {
 		const scopes = ["openid"]
 		if (this.strategySettings.requestRefreshTokens) {
 			scopes.push("offline_access")
@@ -98,8 +119,8 @@ export class VeracityAuthFlowStrategyContext {
 	 * Returns all parameters needed to perform an authorization code exchange for an access token.
 	 * The parameters will remain the same for the lifetime of this instance.
 	 */
-	private get accessTokenParams(): IB2CAccessTokenRequestParameters {
-		if (!this.isB2CLoginResponse) {
+	private get accessTokenParams(): IVIDPAccessTokenRequestParameters {
+		if (!this.isLoginResponse) {
 			throw new Error("This request does not appear to be a login response from B2C. Cannot construct accessTokenParams")
 		}
 
@@ -121,30 +142,31 @@ export class VeracityAuthFlowStrategyContext {
 	/**
 	 * Determines if the current request is a user returning from a login at B2C or a federated service.
 	 */
-	private get isB2CLoginResponse() {
+	private get isLoginResponse() {
 		if (this.req.method !== "POST") return false
 		if (typeof this.req.body !== "object") return false
-		return isB2CLoginResponse(this.req.body)
+		return isVIDPLoginResponse(this.req.body)
 	}
 	/**
 	 * Determines if the current request is a failure response from B2C of any kind.
 	 */
-	private get isB2CFailureResponse() {
+	private get isFailureResponse() {
 		if (this.req.method !== "POST") return false
 		if (!this.req.body) return false
-		return isB2CResponseFailure(this.req.body)
+		return isVIDPResponseFailure(this.req.body)
 	}
 	private get reqBodyLoginResponse() {
-		return this.req.body as IB2CLoginResponseSuccess
+		return this.req.body as IVIDPLoginResponseSuccess
 	}
 	private get reqBodyFailureResponse() {
-		return this.req.body as IB2CAuthorizationCodeExchangeResponseFailure | IB2CLoginResponseFailure
+		return this.req.body as IVIDPAuthorizationCodeExchangeResponseFailure | IVIDPLoginResponseFailure
 	}
 	private session: SessionWrapper<IVeracityAuthFlowSessionData>
 
 	private _nonce = createUid()
 	private _state = createUid()
-	private _idToken?: IVeracityIDTokenPayload
+	private _idToken?: string
+	private _idTokenDecoded?: IVeracityIDTokenPayload
 	private _tokenData?: {[scope: string]: IVeracityTokenData}
 
 	public constructor(
@@ -173,11 +195,11 @@ export class VeracityAuthFlowStrategyContext {
 	 */
 	public async next(): Promise<string | false> {
 		try {
-			if (this.isB2CFailureResponse) {
-				throw new B2CError(this.reqBodyFailureResponse)
+			if (this.isFailureResponse) {
+				throw new VIDPError(this.reqBodyFailureResponse)
 			}
 
-			if (this.isB2CLoginResponse) {
+			if (this.isLoginResponse) {
 				const loginResult = await this.processLoginResponse()
 				if (!loginResult) { // Means there are no more logins to perform
 					this.cleanUp()
@@ -193,12 +215,6 @@ export class VeracityAuthFlowStrategyContext {
 			throw error
 		}
 	}
-	/**
-	 * Clears any temporary session information used during authentication
-	 */
-	public cleanUp() {
-		this.session.destroyNamespace()
-	}
 
 	/**
 	 * Returns metadata from session if possible or from endpoint
@@ -210,6 +226,13 @@ export class VeracityAuthFlowStrategyContext {
 
 		const metadata = await getCachedVeracityAuthMetadata(this.strategySettings)
 		return metadata // Direct return await does not always compile to code that throws errors correclty.
+	}
+
+	/**
+	 * Clears any temporary session information used during authentication
+	 */
+	private cleanUp() {
+		this.session.destroyNamespace()
 	}
 	/**
 	 * Returns a complete validation options object that can be used for validating authorization codes
@@ -250,7 +273,7 @@ export class VeracityAuthFlowStrategyContext {
 			method: "POST",
 			form
 		})
-		return JSON.parse(accessTokenRawResponse) as IB2CAuthorizationCodeExchangeResponseSuccess
+		return JSON.parse(accessTokenRawResponse) as IVIDPAuthorizationCodeExchangeResponseSuccess
 	}
 	private async validateAccessToken(idToken: string, accessToken: string) {
 		const validationOptions = await this.getValidationOptions(idToken)
@@ -289,7 +312,8 @@ export class VeracityAuthFlowStrategyContext {
 	private async processLoginResponse() {
 		const validLoginIDToken = await this.validateLoginResponse()
 		if (!this.currentAPIScope) {
-			this._idToken = validLoginIDToken.payload
+			this._idToken = this.reqBodyLoginResponse.id_token
+			this._idTokenDecoded = validLoginIDToken.payload
 			return false
 		}
 
@@ -301,6 +325,8 @@ export class VeracityAuthFlowStrategyContext {
 			...validAccessToken
 		}
 
+		this._idToken = validAccessToken.idToken
+		this._idTokenDecoded = validAccessToken.idTokenDecoded.payload
 		this._tokenData = {
 			...(this.session.data.tokens || {}),
 			...this.constructTokenData(this.currentAPIScope, allTokenData)
@@ -316,7 +342,7 @@ export class VeracityAuthFlowStrategyContext {
 		return false
 	}
 
-	private constructTokenData(apiScope: string, data: IB2CAuthorizationCodeExchangeResponseSuccess & {
+	private constructTokenData(apiScope: string, data: IVIDPAuthorizationCodeExchangeResponseSuccess & {
 		idToken: string
 		idTokenDecoded: IVeracityIDToken
 		accessToken: string

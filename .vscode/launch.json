@@ -15,6 +15,16 @@
 			"outputCapture": "std",
 		},
 		{
+			"name": "TS Node",
+			"type": "node",
+			"request": "launch",
+			"args": ["${fileBasename}"],
+			"runtimeArgs": ["-r", "ts-node/register"],
+			"cwd": "${fileDirname}",
+			"protocol": "inspector",
+			"outputCapture": "std",
+		},
+		{
 			"name": "Debug Tests",
 			"type": "node",
 			"request": "launch",

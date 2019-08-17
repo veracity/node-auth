@@ -25,7 +25,7 @@ export interface IMakeSessionConfigObjectOptions {
  */
 export declare const makeSessionConfigObject: (options: IMakeSessionConfigObjectOptions & SessionOptions) => {
     secret: string | (string & string[]);
-    store: Store | MemoryStore | (Store & MemoryStore) | (MemoryStore & Store);
+    store: MemoryStore | Store | (MemoryStore & Store) | (Store & MemoryStore);
     name: string;
     cookie: {
         httpOnly: boolean;

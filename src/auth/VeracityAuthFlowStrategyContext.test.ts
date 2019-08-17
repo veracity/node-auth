@@ -1,3 +1,6 @@
+// This line allows access to private members using string index notation
+// tslint:disable: no-string-literal
+
 import { CoreOptions, UrlOptions } from "request"
 import request from "request-promise-native"
 import { mockAuthFlowStrategySettings } from "../../test/mockAuthFlowStrategySettings"
@@ -8,10 +11,8 @@ import {
 	mockJWKResponse,
 	mockMetaResponse
 } from "../../test/mockB2CResponses"
-import { IB2CLoginRequestParamaters, IVeracityAuthFlowSessionData } from "../interfaces"
+import { IVIDPLoginRequestParamaters } from "../interfaces"
 import { VeracityAuthFlowStrategyContext } from "./VeracityAuthFlowStrategyContext"
-
-const verifier: jest.Mock = mockAuthFlowStrategySettings.verifier as any
 
 jest.mock("request-promise-native")
 const requestMock: jest.Mock = request as any
@@ -34,7 +35,6 @@ const mockRequest = {
 
 describe("VeracityAuthFlowStrategyContext", () => {
 	beforeEach(() => {
-		verifier.mockReset()
 		mockRequest.body = ""
 		mockRequest.session = {}
 	})
@@ -48,16 +48,16 @@ describe("VeracityAuthFlowStrategyContext", () => {
 	})
 	test("nonce that is not recomputed", () => {
 		const context = new VeracityAuthFlowStrategyContext(mockRequest, mockAuthFlowStrategySettings)
-		const nonce = context.nonce
+		const nonce = context["nonce"]
 		expect(typeof nonce).toBe("string")
-		const nextNonce = context.nonce
+		const nextNonce = context["nonce"]
 		expect(nonce).toBe(nextNonce)
 	})
 	test("state that is not recomputed", () => {
 		const context = new VeracityAuthFlowStrategyContext(mockRequest, mockAuthFlowStrategySettings)
-		const state = context.state
+		const state = context["state"]
 		expect(typeof state).toBe("string")
-		const nextState = context.state
+		const nextState = context["state"]
 		expect(state).toBe(nextState)
 	})
 	describe("initial state", () => {
@@ -72,38 +72,35 @@ describe("VeracityAuthFlowStrategyContext", () => {
 			expect(context.readyTokens).toEqual([])
 		})
 		test("nextAPIScope returns the first scope", () => {
-			expect(context.nextAPIScope).toEqual(mockAuthFlowStrategySettings.apiScopes![0])
+			expect(context["nextAPIScope"]).toEqual(mockAuthFlowStrategySettings.apiScopes![0])
 		})
 		test("nextAPIScope returns undefiend if no api scopess are defined", () => {
 			const contextWithoutScopes = new VeracityAuthFlowStrategyContext(mockRequest, {
 				...mockAuthFlowStrategySettings,
 				apiScopes: undefined
 			} as any)
-			expect(contextWithoutScopes.nextAPIScope).not.toBeDefined()
-		})
-		test("hasMoreAPIScopes returns true if there are any api scopes", () => {
-			expect(context.hasMoreAPIScopes).toBe(true)
+			expect(contextWithoutScopes["nextAPIScope"]).not.toBeDefined()
 		})
 		test("loginParams produce correct parameters", () => {
-			const expected: IB2CLoginRequestParamaters = {
+			const expected: IVIDPLoginRequestParamaters = {
 				client_id: mockAuthFlowStrategySettings.clientId,
-				nonce: context.nonce,
-				state: context.state,
+				nonce: context["nonce"],
+				state: context["state"],
 				scope: `openid offline_access ${mockAuthFlowStrategySettings.apiScopes![0]}`,
 				redirect_uri: mockAuthFlowStrategySettings.redirectUri,
 				response_mode: "form_post",
 				response_type: "code id_token"
 			}
-			expect(context.loginParams).toEqual(expected)
+			expect(context["loginParams"]).toEqual(expected)
 		})
 		test("isB2CLoginResponse returns false", () => {
-			expect(context.isB2CLoginResponse).toBe(false)
+			expect(context["isLoginResponse"]).toBe(false)
 		})
 		test("isB2CFailureResponse returns false", () => {
-			expect(context.isB2CFailureResponse).toBe(false)
+			expect(context["isFailureResponse"]).toBe(false)
 		})
 		test("getClosestMetadata", async () => {
-			const meta = await context.getClosestMetadata()
+			const meta = await context["getClosestMetadata"]()
 			const expected = mockFullMetadata
 			expect(meta).toEqual(expected)
 		})
@@ -111,7 +108,7 @@ describe("VeracityAuthFlowStrategyContext", () => {
 			const nextResult = await context.next()
 			expect(typeof nextResult).toBe("string")
 			// tslint:disable-next-line: max-line-length
-			expect(nextResult).toEqual(`https://login.microsoftonline.com/dummy-tenant-id/oauth2/v2.0/authorize?p=dummy-policy&client_id=dummy-client-id&redirect_uri=https%3A%2F%2Fdummy-redirect-uri.com&response_type=code%20id_token&response_mode=form_post&scope=openid%20offline_access%20mock-scope-1&state=${context.state}&nonce=${context.nonce}`)
+			expect(nextResult).toEqual(`https://login.microsoftonline.com/dummy-tenant-id/oauth2/v2.0/authorize?p=dummy-policy&client_id=dummy-client-id&redirect_uri=https%3A%2F%2Fdummy-redirect-uri.com&response_type=code%20id_token&response_mode=form_post&scope=openid%20offline_access%20mock-scope-1&state=${context["state"]}&nonce=${context["nonce"]}`)
 		})
 	})
 })

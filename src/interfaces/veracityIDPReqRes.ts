@@ -1,6 +1,6 @@
 // tslint:disable: max-line-length
 /**
- * This file contains interfaces for all the responses expected from B2C.
+ * This file contains interfaces for all the responses expected from the Veracity IDP
  * Refs:
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code#error-codes-for-authorization-endpoint-errors
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oidc
@@ -9,7 +9,7 @@
 /**
  * Describes the known error codes that b2c may return in a failed response.
  */
-export type B2CErrorCodes =
+export type VIDPErrorCodes =
 	"invalid_request" |
 	"unauthorized_client" |
 	"access_denied" |
@@ -21,7 +21,7 @@ export type B2CErrorCodes =
 /**
  * Describes a successful login response from b2c containing the authorization code.
  */
-export interface IB2CLoginResponseSuccess {
+export interface IVIDPLoginResponseSuccess {
 	id_token: string
 	code: string
 	state: string
@@ -29,8 +29,8 @@ export interface IB2CLoginResponseSuccess {
 /**
  * Describes a failed login response from b2c.
  */
-export interface IB2CLoginResponseFailure {
-	error: B2CErrorCodes
+export interface IVIDPLoginResponseFailure {
+	error: VIDPErrorCodes
 	error_description: string
 	state: string
 }
@@ -39,7 +39,7 @@ export interface IB2CLoginResponseFailure {
  * Describes a successful response when exchanging an authorization code for an access token
  * with optional refresh token.
  */
-export interface IB2CAuthorizationCodeExchangeResponseSuccess {
+export interface IVIDPAuthorizationCodeExchangeResponseSuccess {
 	not_before: string
 	token_type: "Bearer"
 	access_token: string
@@ -55,8 +55,8 @@ export interface IB2CAuthorizationCodeExchangeResponseSuccess {
 /**
  * Describes a failed authorization code exchange response.
  */
-export interface IB2CAuthorizationCodeExchangeResponseFailure {
-	error: B2CErrorCodes
+export interface IVIDPAuthorizationCodeExchangeResponseFailure {
+	error: VIDPErrorCodes
 	error_description: string
 }
 
@@ -64,7 +64,7 @@ export interface IB2CAuthorizationCodeExchangeResponseFailure {
  * Describes the parameters required in the url of a request to log a user in.
  * These should be sent as url encoded query parameters.
  */
-export interface IB2CLoginRequestParamaters {
+export interface IVIDPLoginRequestParamaters {
 	client_id: string
 	redirect_uri: string
 	response_type: "code id_token"
@@ -77,7 +77,7 @@ export interface IB2CLoginRequestParamaters {
  * Describes the parameters required for a request to exchange an authorization code for an access token.
  * These should be sent as form post parameters.
  */
-export interface IB2CAccessTokenRequestParameters {
+export interface IVIDPAccessTokenRequestParameters {
 	client_id: string
 	client_secret: string
 	grant_type: "authorization_code"
@@ -86,15 +86,15 @@ export interface IB2CAccessTokenRequestParameters {
 	redirect_uri: string
 }
 
-export const isB2CLoginResponse = (obj: any): obj is IB2CLoginResponseSuccess => !!(
+export const isVIDPLoginResponse = (obj: any): obj is IVIDPLoginResponseSuccess => !!(
 	obj.id_token && obj.code && obj.state
 )
-export const isB2CAuthorizationCodeExchangeResponse = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseSuccess => !!(
+export const isVIDPAuthorizationCodeExchangeResponse = (obj: any): obj is IVIDPAuthorizationCodeExchangeResponseSuccess => !!(
 	obj.not_before && obj.token_type && obj.access_token && obj.expires_in
 )
-export const isB2CLoginResponseFailure = (obj: any): obj is IB2CLoginResponseFailure => !!(
+export const isVIDPLoginResponseFailure = (obj: any): obj is IVIDPLoginResponseFailure => !!(
 	obj.error && obj.error_description && obj.state
 )
-export const isB2CResponseFailure = (obj: any): obj is IB2CAuthorizationCodeExchangeResponseFailure => !!(
+export const isVIDPResponseFailure = (obj: any): obj is IVIDPAuthorizationCodeExchangeResponseFailure => !!(
 	obj.error && obj.error_description
 )
