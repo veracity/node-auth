@@ -5,7 +5,7 @@ export const mockAuthFlowStrategySettings: IVeracityAuthFlowStrategySettingsRequ
 	policy: "dummy-policy",
 	clientId: "dummy-client-id",
 	clientSecret: "dummy-client-secret",
-	redirectUri: "https://dummy-redirect-uri.com",
+	replyUrl: "https://dummy-redirect-uri.com",
 	requestRefreshTokens: true,
 	apiScopes: [
 		"mock-scope-1",

@@ -68,8 +68,8 @@ describe("VeracityAuthFlowStrategyContext", () => {
 		test("idToken returns nothing", () => {
 			expect(context.idToken).not.toBeDefined()
 		})
-		test("readyTokens returns empty array", () => {
-			expect(context.readyTokens).toEqual([])
+		test("readyTokens returns undefined", () => {
+			expect(context.readyTokens).not.toBeDefined()
 		})
 		test("nextAPIScope returns the first scope", () => {
 			expect(context["nextAPIScope"]).toEqual(mockAuthFlowStrategySettings.apiScopes![0])
@@ -87,7 +87,7 @@ describe("VeracityAuthFlowStrategyContext", () => {
 				nonce: context["nonce"],
 				state: context["state"],
 				scope: `openid offline_access ${mockAuthFlowStrategySettings.apiScopes![0]}`,
-				redirect_uri: mockAuthFlowStrategySettings.redirectUri,
+				redirect_uri: mockAuthFlowStrategySettings.replyUrl,
 				response_mode: "form_post",
 				response_type: "code id_token"
 			}
