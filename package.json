@@ -4,7 +4,8 @@
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
     "build:copyfiles": "ts-node -T scripts/build.ts",
-    "build": "rimraf dist && tsc --build tsconfig.json && build:copyfiles",
+    "build:tsc": "rimraf dist && tsc --build tsconfig.json",
+    "build": "npm run build:tsc && npm run build:copyfiles",
     "test": "jest",
     "test:watch": "jest --watch"
   },
