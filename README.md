@@ -1,6 +1,8 @@
 # Veracity Authentication library for NodeJS
 This library provides utilities that help with authentication related operations using the Veracity Identity Provider.
 
+**DISCLAIMER** This package is in alpha and is not yet completed and ready for production use.
+
 **Current features**
 - Authentication Strategy for PassportJS that performs Authorization Code flow authentication and token exchange for zero or more API tokens.
 - Helper for configuring express, express-session and passport with the strategy.
