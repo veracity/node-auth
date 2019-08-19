@@ -1,4 +1,5 @@
 import { Request } from "express"
+import { VIDPError } from "../auth/errors/VIDPError"
 import {
 	isVIDPLoginResponse,
 	isVIDPResponseFailure,
@@ -15,17 +16,12 @@ import {
 	IVIDPLoginResponseFailure,
 	IVIDPLoginResponseSuccess
 } from "../interfaces"
-import {
-	createUid,
-	getCachedVeracityAuthMetadata,
-	IValidationOptions,
-	request,
-	SessionWrapper,
-	validateIDTokenAndAccessToken,
-	validateIDTokenAndAuthorizationCode
-} from "../utils"
-import { combineParams, encodeURIParams } from "../utils/uriParams"
-import { VIDPError } from "./errors/VIDPError"
+import { createUid } from "./createUid"
+import getCachedVeracityAuthMetadata from "./getVeracityAuthMetadata"
+import request from "./request"
+import { SessionWrapper } from "./SessionWrapper"
+import { combineParams, encodeURIParams } from "./uriParams"
+import { IValidationOptions, validateIDTokenAndAccessToken, validateIDTokenAndAuthorizationCode } from "./validation"
 
 export interface IVeracityAuthFlowSessionData {
 	metadata: IVeracityAuthMetadataWithJWKs
@@ -40,6 +36,15 @@ export interface IVeracityAuthFlowSessionData {
 	 * All access tokens that have been negotiated and validated.
 	 */
 	tokens?: {[scope: string]: IVeracityTokenData}
+
+	/**
+	 * Contains the original auth state from the first login request if any was present.
+	 */
+	veracityAuthState?: any
+	/**
+	 * Contains any query parameters passed to the original logni request.
+	 */
+	queryParams?: {[key: string]: string}
 }
 
 /**
@@ -195,6 +200,7 @@ export class VeracityAuthFlowStrategyContext {
 	 */
 	public async next(): Promise<string | false> {
 		try {
+			this.restoreStateOnRequset()
 			if (this.isFailureResponse) {
 				throw new VIDPError(this.reqBodyFailureResponse)
 			}
@@ -251,6 +257,14 @@ export class VeracityAuthFlowStrategyContext {
 		}
 	}
 
+	private restoreStateOnRequset() {
+		if (this.session.data.queryParams) {
+			this.req.query = this.session.data.queryParams
+		}
+		if (this.session.data.veracityAuthState) {
+			(this.req as any).veracityAuthState = this.session.data.veracityAuthState
+		}
+	}
 	private regenerateNonce() {
 		this._nonce = createUid()
 	}
@@ -294,7 +308,10 @@ export class VeracityAuthFlowStrategyContext {
 			apiScope: this.nextAPIScope,
 			state: params.state,
 			nonce: params.nonce,
-			metadata
+			metadata,
+
+			queryParams: this.session.data.queryParams || this.req.query,
+			veracityAuthState: this.session.data.veracityAuthState || (this.req as any).veracityAuthState
 		}
 
 		const loginUrl = metadata.authorization_endpoint +

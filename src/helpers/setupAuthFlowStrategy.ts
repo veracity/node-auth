@@ -1,6 +1,9 @@
 import { RequestHandler, Router } from "express-serve-static-core"
 import { VeracityAuthFlowStrategy } from "../auth/VeracityAuthFlowStrategy"
-import { IVeracityAuthFlowStrategySettings, VerifierFunction } from "../interfaces"
+import {
+	IVeracityAuthFlowStrategySettings,
+	VerifierFunction
+} from "../interfaces"
 import { defaultAuthFlowStrategySettings } from "./defaultAuthFlowStrategySettings"
 import makeSessionConfigObject, { IMakeSessionConfigObjectOptions } from "./makeSessionConfigObject"
 
@@ -20,10 +23,15 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	loginPath: string
 
 	/**
+	 * A handler that is run before the login process begins.
+	 * Note that this handler MUST call next() in order to continue the login process.
+	 */
+	onBeforeLogin?: RequestHandler
+	/**
 	 * A function that is called once the user has completely logged in.
 	 * Here you can specify how the user object will look when it's attached to req.user
 	 */
-	onLoginVerifier: VerifierFunction<TUser>
+	onVerify?: VerifierFunction<TUser>
 	/**
 	 * The handler to call when the login has completed.
 	 */
@@ -63,7 +71,17 @@ const getUrlPath = (absoluteUrl: string) => {
  * They are set as optional dependencies of this library.
  */
 export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOptions) => {
-	const { appOrRouter: app, loginPath, onLoginVerifier, onLoginComplete, strategySettings, sessionSettings } = options
+	const {
+		appOrRouter: app,
+		loginPath,
+		onBeforeLogin = (req: any, res: any, next: any) => {next()},
+		onVerify = (verifyOptions: any, done: any) => {
+			done(null, verifyOptions)
+		},
+		onLoginComplete,
+		strategySettings,
+		sessionSettings
+	} = options
 	const name = "veracityauthflow"
 
 	app.use(session(makeSessionConfigObject((sessionSettings))))
@@ -74,11 +92,11 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 		...defaultAuthFlowStrategySettings,
 		...strategySettings
 	}
-	passport.use(name, new VeracityAuthFlowStrategy<TUser>(allStrategySettings, onLoginVerifier))
+	passport.use(name, new VeracityAuthFlowStrategy<TUser>(allStrategySettings, onVerify))
 	passport.serializeUser((user, done) => { done(null, user) })
 	passport.deserializeUser((id, done) => { done(null, id) })
 
-	app.get(loginPath, passport.authenticate(name), (req, res) => {
+	app.get(loginPath, onBeforeLogin, passport.authenticate(name), (req, res) => {
 		res.send({
 			message: "If you can see this please copy everything on this page "+
 				"and report the error on https://github.com/veracity/node-veracity-auth/issues"

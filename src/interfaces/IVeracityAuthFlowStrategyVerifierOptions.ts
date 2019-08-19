@@ -1,3 +1,4 @@
+import { Request } from "express-serve-static-core"
 import { IVeracityTokenData } from "./IVeracityTokenData"
 import { IVeracityIDTokenPayload } from "./veracityTokens"
 
@@ -34,4 +35,4 @@ export type DoneFunction<TUser> = (err: any, user: TUser | null, info?: any) => 
  * Once this is done call the provided done function with the final user object as the second argument.
  */
 export type VerifierFunction<TUser> = (
-	options: IVeracityAuthFlowStrategyVerifierOptions, done: DoneFunction<TUser>) => void | Promise<void>
+	options: IVeracityAuthFlowStrategyVerifierOptions, done: DoneFunction<TUser>, req: Request) => void | Promise<void>

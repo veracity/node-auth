@@ -4,7 +4,7 @@ import {
 	IVeracityAuthFlowStrategySettings,
 	VerifierFunction
 } from "../interfaces"
-import { VeracityAuthFlowStrategyContext } from "./VeracityAuthFlowStrategyContext"
+import { VeracityAuthFlowStrategyContext } from "../utils/VeracityAuthFlowStrategyContext"
 
 /**
  * Defines a strategy for authenticating with Veracity and aquiring access tokens using the
@@ -59,7 +59,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 						idToken: context.idToken!,
 						idTokenDecoded: context.idTokenDecoded!,
 						apiTokens: context.readyTokens
-					}, this.done.bind(this))
+					}, this.done.bind(this), req)
 			}
 			this.self.redirect(nextResult)
 		} catch (error) {

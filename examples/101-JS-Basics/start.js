@@ -8,15 +8,15 @@ const generateCerts = require("./generateCerts") // Helps us generate self-signe
 const credentials = require("./credentials") // Get the secret credentials for our application
 
 // Imports the helper function that will aid us in setting up everything needed to authenticate
-const {helpers} = require("@veracity/node-auth")
+const {setupAuthFlowStrategy} = require("@veracity/node-auth/lib/helpers")
 
 // Create the application instance for our express application
 const app = express()
 
 // Now we use the helper function provided by @veracity/node-auth to configure our application to allow
 // authenticating with the Veracity Identity Provider
-helpers.setupAuthFlowStrategy({
-	appOrRouter: app, // The helper will configure out app so we need to provide the instance
+setupAuthFlowStrategy({
+	appOrRouter: app, // The helper will configure our app so we need to provide the instance
 	loginPath: "/login", // Where will users go to log in
 	strategySettings: { // These are settings for the passport strategy we use to authenticate with Veracity
 		...credentials, // We need to provide our application credentials
@@ -32,7 +32,7 @@ helpers.setupAuthFlowStrategy({
 	 * This function is run after the authentication process is completed. It allows us to define 
 	 * what we want to store in the user object in session.
 	 */
-	onLoginVerifier: (options, done) => {
+	onVerify: (options, done, req) => { // req is not used
 		done(null, options) // We store everything we get back from the Veracity IDP in our user object.
 	},
 
@@ -42,13 +42,17 @@ helpers.setupAuthFlowStrategy({
 	 * they started the login process.
 	 */
 	onLoginComplete: (req, res, next) => {
-		res.send(req.user) // This logs our entire user object out to the browser so we can inspect it
+		res.redirect(req.query.returnTo || "/")
 	}
 })
 
 // Set up a handler on the root of our application so we can see that it's working.
 app.get("/", (req, res) => {
 	res.send(`Click <a href="/login"/>here</a> to log in`)
+})
+// A debugging endpoint that will show us the user object currently in session
+app.get("/user", (req, res) => {
+	res.send(req.user)
 })
 
 
