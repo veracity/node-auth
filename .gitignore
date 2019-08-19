@@ -62,3 +62,5 @@ typings/
 
 # Ignore local test folder
 src/localtest
+
+dist

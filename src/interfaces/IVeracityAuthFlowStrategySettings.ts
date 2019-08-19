@@ -1,12 +1,14 @@
 export interface IVeracityAuthFlowStrategySettings {
 	/**
 	 * The id of the Veracity tenant you are authenticating with.
+	 * @default "a68572e3-63ce-4bc1-acdc-b64943502e9d"
 	 */
-	tenantId: string
+	tenantId?: string
 	/**
 	 * The name of the authenication policy.
+	 * @default "B2C_1A_SignInWithADFSIdp"
 	 */
-	policy: string
+	policy?: string
 
 	/**
 	 * The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
@@ -17,31 +19,25 @@ export interface IVeracityAuthFlowStrategySettings {
 	 */
 	clientSecret: string
 	/**
-	 * The redirect url from the Application Credentials you created in the Veracity for Developers Provider Hub
+	 * The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub
 	 */
-	redirectUri: string
+	replyUrl: string
 
 	/**
 	 * If true retrieves a refresh token for each api scope in addition to the access token.
+	 * @default true
 	 */
 	requestRefreshTokens?: boolean
 
 	/**
 	 * The scopes you wish to authenticate with. An access token will be retrieved for each api scope.
 	 * If you only wish to authenticate with Veracity you can ignore this setting.
+	 * ["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]
 	 */
 	apiScopes?: string[]
+}
 
-	/**
-	 * Contains configuration for strategy internals.
-	 */
-	configuration?: {
-		/**
-		 * The number of seconds to keep metadata configuration cached locally.
-		 * Setting this can drastically reduce the time it takes to log in by not requiring that the back end
-		 * refetches metadata every time it is needed.
-		 * Do not set it too large as it may become stale. Recommended value ~120
-		 */
-		keepMetadataFor?: number
-	}
+export interface IVeracityAuthFlowStrategySettingsRequired extends IVeracityAuthFlowStrategySettings {
+	tenantId: string
+	policy: string
 }

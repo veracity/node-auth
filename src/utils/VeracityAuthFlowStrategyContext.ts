@@ -4,7 +4,7 @@ import {
 	isVIDPLoginResponse,
 	isVIDPResponseFailure,
 	IVeracityAccessToken,
-	IVeracityAuthFlowStrategySettings,
+	IVeracityAuthFlowStrategySettingsRequired,
 	IVeracityAuthMetadataWithJWKs,
 	IVeracityIDToken,
 	IVeracityIDTokenPayload,
@@ -17,7 +17,7 @@ import {
 	IVIDPLoginResponseSuccess
 } from "../interfaces"
 import { createUid } from "./createUid"
-import getCachedVeracityAuthMetadata from "./getVeracityAuthMetadata"
+import getVeracityAuthMetadata from "./getVeracityAuthMetadata"
 import request from "./request"
 import { SessionWrapper } from "./SessionWrapper"
 import { combineParams, encodeURIParams } from "./uriParams"
@@ -112,7 +112,7 @@ export class VeracityAuthFlowStrategyContext {
 		scopes.push(this.nextAPIScope || "")
 		return {
 			client_id: this.strategySettings.clientId,
-			redirect_uri: this.strategySettings.redirectUri,
+			redirect_uri: this.strategySettings.replyUrl,
 			response_type: "code id_token",
 			response_mode: "form_post",
 			scope: scopes.join(" "),
@@ -139,7 +139,7 @@ export class VeracityAuthFlowStrategyContext {
 			client_secret: this.strategySettings.clientSecret,
 			code: this.reqBodyLoginResponse.code,
 			grant_type: "authorization_code",
-			redirect_uri: this.strategySettings.redirectUri,
+			redirect_uri: this.strategySettings.replyUrl,
 			scope: scopes.join(" ")
 		}
 	}
@@ -176,7 +176,7 @@ export class VeracityAuthFlowStrategyContext {
 
 	public constructor(
 		private req: Request,
-		private strategySettings: IVeracityAuthFlowStrategySettings
+		private strategySettings: IVeracityAuthFlowStrategySettingsRequired
 	) {
 		this.session = new SessionWrapper<IVeracityAuthFlowSessionData>("authflow", req)
 	}
@@ -230,7 +230,8 @@ export class VeracityAuthFlowStrategyContext {
 			return this.session.data.metadata
 		}
 
-		const metadata = await getCachedVeracityAuthMetadata(this.strategySettings)
+		const {tenantId, policy} = this.strategySettings
+		const metadata = await getVeracityAuthMetadata({tenantId, policy})
 		return metadata // Direct return await does not always compile to code that throws errors correclty.
 	}
 

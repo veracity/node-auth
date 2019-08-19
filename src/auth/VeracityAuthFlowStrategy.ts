@@ -1,7 +1,8 @@
 import { Request } from "express"
-import { Strategy, StrategyCreatedStatic } from "passport"
+import passport, { Strategy, StrategyCreatedStatic } from "passport"
 import {
 	IVeracityAuthFlowStrategySettings,
+	IVeracityAuthFlowStrategySettingsRequired,
 	VerifierFunction
 } from "../interfaces"
 import { VeracityAuthFlowStrategyContext } from "../utils/VeracityAuthFlowStrategyContext"
@@ -13,7 +14,6 @@ import { VeracityAuthFlowStrategyContext } from "../utils/VeracityAuthFlowStrate
  * It supports negotiating for multiple access tokens for different services (api scopes).
  */
 export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
-
 	/**
 	 * Used for internal calls to the methods provided by PassportJs.
 	 * This ensures typings work correctly.
@@ -22,16 +22,14 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		return this as any
 	}
 	public name?: string
+	public settings: IVeracityAuthFlowStrategySettingsRequired
 
 	public constructor(
-		private settings: IVeracityAuthFlowStrategySettings,
+		settings: IVeracityAuthFlowStrategySettings,
 		private verifier: VerifierFunction<TUser>
 	) {
-		if (!settings.tenantId) {
-			throw new Error("The tenantId setting is required.")
-		}
-		if (!settings.policy) {
-			throw new Error("The policy setting is required.")
+		if (!passport) {
+			throw new Error(`Unable to dedect the passport dependency. Install it by running "npm i passport"`)
 		}
 		if (!settings.clientId) {
 			throw new Error("The clientId setting is required.")
@@ -39,8 +37,16 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		if (!settings.clientSecret) {
 			throw new Error("The clientSecret setting is required.")
 		}
-		if (!settings.redirectUri) {
-			throw new Error("The redirectUri setting is required.")
+		if (!settings.replyUrl) {
+			throw new Error("The replyUrl setting is required.")
+		}
+
+		this.settings = {
+			tenantId: "a68572e3-63ce-4bc1-acdc-b64943502e9d",
+			policy: "B2C_1A_SignInWithADFSIdp",
+			apiScopes: ["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"],
+			requestRefreshTokens: true,
+			...settings
 		}
 	}
 

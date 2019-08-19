@@ -98,3 +98,45 @@ export const isVIDPLoginResponseFailure = (obj: any): obj is IVIDPLoginResponseF
 export const isVIDPResponseFailure = (obj: any): obj is IVIDPAuthorizationCodeExchangeResponseFailure => !!(
 	obj.error && obj.error_description
 )
+
+/**
+ * Describes a Veracity JWK entry as seen from the Veracity IDP.
+ */
+export interface IVeracityJWK {
+	kid: string
+	e: string
+	n: string
+}
+
+/**
+ * Describes a Veracity JWK entry with a generated public key.
+ */
+export interface IVeracityJWKWithPEM extends IVeracityJWK {
+	pem: string
+}
+/**
+ * Describes the data returned from a direct call to the metadata endpoint
+ * using the proper policy parameter.
+ */
+export interface IVeracityAuthMetadata {
+	issuer: string
+	authorization_endpoint: string
+	token_endpoint: string
+	end_session_endpoint: string
+	jwks_uri: string
+
+	response_modes_supported: string[]
+	response_types_supported: string[]
+	scopes_supported: string[]
+	subject_types_supported: string[]
+	id_token_signing_alg_values_supported: string[]
+	token_endpoint_auth_methods_supported: string[]
+	claims_supported: string[]
+}
+
+/**
+ * Describes the metadata returned from the Veracity IDP metadata endpoint with JWKs that include PEMs.
+ */
+export interface IVeracityAuthMetadataWithJWKs extends IVeracityAuthMetadata {
+	jwks: IVeracityJWKWithPEM[]
+}

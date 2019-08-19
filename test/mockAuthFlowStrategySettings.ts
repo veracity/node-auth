@@ -1,6 +1,6 @@
-import { IVeracityAuthFlowStrategySettings } from "../src/interfaces"
+import { IVeracityAuthFlowStrategySettingsRequired } from "../src/interfaces"
 
-export const mockAuthFlowStrategySettings: IVeracityAuthFlowStrategySettings = {
+export const mockAuthFlowStrategySettings: IVeracityAuthFlowStrategySettingsRequired = {
 	tenantId: "dummy-tenant-id",
 	policy: "dummy-policy",
 	clientId: "dummy-client-id",
@@ -10,8 +10,5 @@ export const mockAuthFlowStrategySettings: IVeracityAuthFlowStrategySettings = {
 	apiScopes: [
 		"mock-scope-1",
 		"mock-scope-2"
-	],
-	configuration: {
-		keepMetadataFor: 120
-	}
+	]
 }

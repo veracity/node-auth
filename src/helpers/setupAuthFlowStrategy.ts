@@ -4,7 +4,6 @@ import {
 	IVeracityAuthFlowStrategySettings,
 	VerifierFunction
 } from "../interfaces"
-import { defaultAuthFlowStrategySettings } from "./defaultAuthFlowStrategySettings"
 import makeSessionConfigObject, { IMakeSessionConfigObjectOptions } from "./makeSessionConfigObject"
 
 import bodyParser from "body-parser"
@@ -23,6 +22,15 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	loginPath: string
 
 	/**
+	 * Define all required settings to set up the Veracity authentication strategy.
+	 */
+	strategySettings: IVeracityAuthFlowStrategySettings,
+	/**
+	 * Define required settings for the session middleware.
+	 */
+	sessionSettings: IMakeSessionConfigObjectOptions
+
+	/**
 	 * A handler that is run before the login process begins.
 	 * Note that this handler MUST call next() in order to continue the login process.
 	 */
@@ -34,18 +42,9 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	onVerify?: VerifierFunction<TUser>
 	/**
 	 * The handler to call when the login has completed.
+	 * Defaults to handler that redirects you to whatever was sent in the returnTo query parameter or to "/".
 	 */
-	onLoginComplete: RequestHandler
-
-	/**
-	 * Define all required settings to set up the Veracity authentication strategy.
-	 */
-	strategySettings: Omit<IVeracityAuthFlowStrategySettings,
-		"tenantId" | "policy" | "requestRefreshToken" | "configuration">,
-	/**
-	 * Define required settings for the session middleware.
-	 */
-	sessionSettings: IMakeSessionConfigObjectOptions
+	onLoginComplete?: RequestHandler
 }
 
 const getUrlPath = (absoluteUrl: string) => {
@@ -74,13 +73,13 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 	const {
 		appOrRouter: app,
 		loginPath,
+		strategySettings,
+		sessionSettings,
 		onBeforeLogin = (req: any, res: any, next: any) => {next()},
 		onVerify = (verifyOptions: any, done: any) => {
 			done(null, verifyOptions)
 		},
-		onLoginComplete,
-		strategySettings,
-		sessionSettings
+		onLoginComplete = (req: any, res: any) => {res.redirect(req.query.returnTo || "/")}
 	} = options
 	const name = "veracityauthflow"
 
@@ -88,11 +87,7 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 	app.use(passport.initialize())
 	app.use(passport.session())
 
-	const allStrategySettings: IVeracityAuthFlowStrategySettings = {
-		...defaultAuthFlowStrategySettings,
-		...strategySettings
-	}
-	passport.use(name, new VeracityAuthFlowStrategy<TUser>(allStrategySettings, onVerify))
+	passport.use(name, new VeracityAuthFlowStrategy<TUser>(strategySettings, onVerify))
 	passport.serializeUser((user, done) => { done(null, user) })
 	passport.deserializeUser((id, done) => { done(null, id) })
 
@@ -103,7 +98,7 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 		})
 	})
 	app.post(
-		getUrlPath(strategySettings.redirectUri),
+		getUrlPath(strategySettings.replyUrl),
 		bodyParser.urlencoded({extended: true}),
 		passport.authenticate(name),
 		onLoginComplete)

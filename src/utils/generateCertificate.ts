@@ -3,9 +3,13 @@
  * It is NOT intended for production use.
  */
 
-const forge = require("node-forge")
+import forge from "node-forge"
 
-module.exports = () => {
+export const generateCertificate = () => {
+	if (process.env.NODE_ENV === "production") {
+		console.warn("The generateCertificate utility should not be used for production code.")
+	}
+
 	const pki = forge.pki
 	const keys = pki.rsa.generateKeyPair(2048)
 	const cert = pki.createCertificate()
@@ -95,3 +99,5 @@ module.exports = () => {
 		cert: certPem
 	}
 }
+
+export default generateCertificate
