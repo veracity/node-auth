@@ -29,6 +29,7 @@ npm i passport @veracity/node-auth
 Now you can set up your application using the helper function `setupAuthFlowStrategy`. See documentation of the settings below.
 ```javascript
 const express = require("express")
+const { MemoryStore } = require("express-session")
 const {setupAuthFlowStrategy} = require("@veracity/node-auth/helpers")
 
 const app = express() // Create our app instance
@@ -71,6 +72,7 @@ Now you can set up an https server locally by requiring `https` and slightly mod
 
 ```javascript
 const express = require("express")
+const { MemoryStore } = require("express-session")
 const {setupAuthFlowStrategy} = require("@veracity/node-auth/helpers")
 
 const https = require("https")
