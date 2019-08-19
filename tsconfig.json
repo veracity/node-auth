@@ -65,6 +65,6 @@
     "test",
     "**/*.test.ts",
     "node_modules",
-    "lib"
+    "dist"
   ]
 }
