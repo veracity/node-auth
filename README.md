@@ -1,5 +1,5 @@
 # Veracity Authentication library for NodeJS
-This library provides utilities that help with authentication related operations using the Veracity Identity Provider.
+This library provides utilities that help with authentication-related operations using the Veracity Identity Provider.
 
 **DISCLAIMER** This package is in alpha and is not yet completed and ready for production use.
 
@@ -15,7 +15,7 @@ The library provides a way for you to set up passport with the strategy yourself
 In either case, before you begin you should go to the [Veracity for Developers project portal](https://developer.veracity.com/projects) and create an Application Credential resource. This will register your application with Veracity and allow it to perform authentication. You need three settings from this portal:
 - Client ID
 - Client Secret
-- Reply url
+- Reply URL
 
 Once you have this information you can begin building your application.
 
@@ -37,7 +37,7 @@ const {setupAuthFlowStrategy} = require("@veracity/node-auth/helpers")
 const app = express() // Create our app instance
 
 setupAuthFlowStrategy({
-	appOrRouter: app,	appOrRouter: app,
+	appOrRouter: app,
 	loginPath: "/login",
 	strategySettings: { // These settings comes from the Veracity for Developers application credential
 		clientId: "", // Your client id
@@ -59,7 +59,7 @@ app.listen(3000, () => {
 })
 ```
 
-That's it. You should now be able to authenticate with Veracity using your application. It will automatically retrieve an access token for you for communicating with the Veracity Service api and store everyting on the `req.user` object.
+That's it. You should now be able to authenticate with Veracity using your application. It will automatically retrieve an access token for you for communicating with the Veracity Service API and store everything on the `req.user` object.
 
 **HTTPS**
 
@@ -115,9 +115,9 @@ server.listen(3000, () => { // And finally start listening for connections
 You should now have a locally running express server that supports Veracity Authentication
 
 ### Using the passport strategy directly
-If your application has more complex requirements or you find you are unable to get stuff running the way you want to using `setupAuthFlowStrategy` you can set up the passport strategy yourself. This requires more steps, but gives you much greater control over the process.
+If your application has more complex requirements or you find you are unable to get stuff running the way you want to using `setupAuthFlowStrategy` you can set up the passport strategy yourself. This requires more steps but gives you much greater control over the process.
 
-Provided you have a [Connect](https://github.com/senchalabs/connect) compatible library powering your application (ExpressJS is Connect compatible) the library should not require any specific dependencies. However you are required to provide functionality equivalent to the following dependencies:
+Provided you have a [Connect](https://github.com/senchalabs/connect) compatible library powering your application (ExpressJS is Connect compatible) the library should not require any specific dependencies. However, you are required to provide functionality equivalent to the following dependencies:
 `express-session` and `body-parser`. The former exposes persistent session storage on `req.session` while the latter allows parsing of form post data and the result be placed on `req.body`.
 
 Start by installing the required dependencies
@@ -170,16 +170,16 @@ app.get("/login", passport.authenticate("veracity"))
 // Set up the return endpoint the user is redirected back to after logging in
 // This must match the path section of the reply url you configured above e.g.: /auth/oidc/loginreturn
 app.post("[path section of replyUrl]", bodyParser.urlencoded({extended: true}), passport.authenticate("veracity"), (req, res) => {
-	res.redirect("/") // This is called once login has completed. Route back to the root of the application
+	res.redirect("/") // This is called once login has completed. Routes you back to the root of the application
 })
 ```
 
 Your application should now be configured to authenticate with Veracity.
 
 ## Authentication process
-The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsofts website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code).
+The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code).
 
-This library provides you with a *strategy* that you can use to perform authentication. The technicalities of the protocol is then handled by the library and you can focus on utilizing the resulting tokens to call apis and build cool applications.
+This library provides you with a *strategy* that you can use to perform authentication. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build cool applications.
 
 ## API
 
@@ -194,16 +194,16 @@ passport.use("veracity", new VeracityAuthFlowStrategy(options, verifier))
 - `policy`: Default: `B2C_1A_SignInWithADFSIdp` Describes the way you want to authenticate. You probably do not need to change this.
 - `clientId`: This is your applications client id. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
 - `clientSecret`: This is your applications client secret. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
-- `replyUrl`: The url users are redirected back to after logging in. You can configure this in the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal.
+- `replyUrl`: The URL users are redirected back to after logging in. You can configure this in the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal.
 - `requestRefreshToken`: Default `true`. Set this to true if you want to retrieve a refresh token along with each access token you want. Refresh tokens allow you to request new access tokens once they expire.
-- `apiScopes`: Defaults to scope for Veracity Services API. This is where you configure which scopes you want to aquire access tokens for when users log in. You can specify zero or more scopes depending on your need. If you do not need to call any of the Veracity APIs, but simply wish to use Veracity for authentication set this to an empty array.
+- `apiScopes`: Defaults to scope for Veracity Services API. This is where you configure which scopes you want to acquire access tokens for when users log in. You can specify zero or more scopes depending on your need. If you do not need to call any of the Veracity APIs, but simply wish to use Veracity for authentication set this to an empty array.
 
 **verifier**
 
 The verifier function is commonly used by `passport` to look up the user and verify that they are registered with the system. Since you are using Veracity as your Identity Provider you can assume that if this function is called the user is indeed registered and valid. Instead you may use this function to augment the user object with data from other internal systems or databases.
 
 - `options`: The options object contains the id token and every access token the authentication process received. 
-- `done()`: This is the done function from `passport` that you must call in order to tell passport that authentication has completed.
+- `done()`: This is the done function from `passport` that you must call to tell passport that authentication has completed.
 - `req`: The request object from express for this specific request.
 
 The verifier can be synchronous or asynchronous.
@@ -232,16 +232,16 @@ const verifier = async (options, done) => {
 The options object given to the verifier function gives you access to all the data necessary to call protected APIs and display some basic user information.
 
 - `idToken`: The full ID token as a string.
-- `idTokenDecoded`: The decoded ID token payload with all claims. Here is where you find user information.
-- `apiTokens`: An object indexed by api scope strings containing every access token as well as additional information such as expire time and refresh token (if applicable). This object will not be present if you do not specify any api scopes in the strategy settings.
+- `idTokenDecoded`: The decoded ID token payload with all claims. Here you find the user's information.
+- `apiTokens`: An object indexed by API scope strings containing every access token as well as additional information such as expire time and refresh token (if applicable). This object will not be present if you do not specify any API scopes in the strategy settings.
 
-For a list of all returned claims in the ID and access tokens see the file `veracityTokens.ts` in the `interfaces` folder.
+For a list of all returned claims in the ID and access tokens, see the file `veracityTokens.ts` in the `interfaces` folder.
 
 **setupAuthFlowStrategy options**
 - `appOrRouter`: The express application instance or router you wish to configure.
 - `loginPath`: The path in your application users should visit to log in.
 - `strategySettings`: The settings for VeracityAuthFlowStrategy (see above)
 - `sessionSettings`: Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
-- `onBeforeLogin`: An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
-- `onVerify`: The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed. The default handler will pass all data from the authentcation over to `req.user`.
+- `onBeforeLogin`: An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceed.
+- `onVerify`: The verify callback for the strategy. It is called once all tokens have been retrieved and allow you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed. The default handler will pass all data from the authentication over to `req.user`.
 - `onLoginComplete`: An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
