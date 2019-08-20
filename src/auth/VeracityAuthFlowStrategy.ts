@@ -6,6 +6,7 @@ import {
 	VerifierFunction
 } from "../interfaces"
 import { VeracityAuthFlowStrategyContext } from "../utils/VeracityAuthFlowStrategyContext"
+import { VIDPError } from "./errors/VIDPError"
 
 /**
  * Defines a strategy for authenticating with Veracity and aquiring access tokens using the
@@ -29,16 +30,20 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		private verifier: VerifierFunction<TUser>
 	) {
 		if (!passport) {
-			throw new Error(`Unable to dedect the passport dependency. Install it by running "npm i passport"`)
+			throw new VIDPError("missing_dependency",
+				`Unable to dedect the passport dependency. Install it by running "npm i passport"`)
 		}
 		if (!settings.clientId) {
-			throw new Error("The clientId setting is required.")
+			throw new VIDPError("setting_error",
+				"The clientId setting is required.")
 		}
 		if (!settings.clientSecret) {
-			throw new Error("The clientSecret setting is required.")
+			throw new VIDPError("setting_error",
+				"The clientSecret setting is required.")
 		}
 		if (!settings.replyUrl) {
-			throw new Error("The replyUrl setting is required.")
+			throw new VIDPError("setting_error",
+				"The replyUrl setting is required.")
 		}
 
 		this.settings = {
@@ -52,7 +57,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 
 	public async authenticate(req: Request, options?: any) {
 		if (!req.session) {
-			this.self.error(new Error("Session support is required for this Veracity strategy. "+
+			this.self.error(new VIDPError("missing_dependency", "Session support is required for this Veracity strategy. "+
 				"Please ensure sessions are enabled before authenticating."))
 			return
 		}
@@ -69,6 +74,11 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			}
 			this.self.redirect(nextResult)
 		} catch (error) {
+			if (!(error instanceof VIDPError)) {
+				const vidpError = new VIDPError("unknown_error", error.message, error)
+				this.self.error(vidpError)
+				return
+			}
 			this.self.error(error)
 		}
 	}

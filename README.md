@@ -245,3 +245,45 @@ For a list of all returned claims in the ID and access tokens see the file `vera
 - `onBeforeLogin`: An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
 - `onVerify`: The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed. The default handler will pass all data from the authentcation over to `req.user`.
 - `onLoginComplete`: An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
+
+## Error handling
+Any error that occurs within a strategy provided by this library will be an instance of a `VIPDError`. VIDPError objects are extensions of regular Error objects that contain additional information about what type of error occured. Using this information you can decide how to proceed.
+
+VIDPError objects expose a `details` property that contains:
+- `error`: The error code for this error (see the complete list below)
+- `description`: A textual description of the error
+- `innerError`: Certain errors such as token validation errors will contain an inner error from the validation library. You can inspect this for more details.
+
+Should an error occur during the authentication process it will be passed to next() just like other errors in Connect-compatible applications like ExpressJS. You should handle these errors according to the documentation from your library of choice. You can find more information on error handling in [Connect here](https://github.com/senchalabs/connect#error-middleware) and [ExpressJS here](https://expressjs.com/en/guide/error-handling.html).
+
+```javascript
+// Register an error handler in your application
+app.use((err, req, res, next) => {
+	if (err instanceof VIDPError) { // This is an error that occured with the Veracity Authentication strategy
+		// Check err.details.error for the type and act accordingly
+	}
+})
+```
+
+### Error types:
+The `error` property of the VIDPError object defines the type of error that has occurred.
+
+These types may be thrown by the IDP server:
+-	`invalid_request`: There was a formatting error in the request to the IDP server. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
+- `unauthorized_client`: Your client id, secret or reply url may be incorrect.
+- `access_denied`: The client application can notify the user that it cannot proceed unless the user consents.
+- `unsupported_response_type`: The request to the server requested an unsupported response type. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
+- `server_error`: An error occurred on the server side. You should retry the request.
+- `temporarily_unavailable`: The server may be overloaded or slow. You should retry the request later.
+- `invalid_resource`: The resource requested does not exist. Check your api scopes.
+
+These types are thrown by the library:
+- `setting_error`: One or more required settings are invalid or missing. Check your configuration file.
+- `missing_dependency`: A dependency (such as `passport`) is missing. Install the missing dependency.
+- `unknown_response`: The response from the IDP was not what was expected. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
+- `response_validation_error`: The response from the IDP was invalid. Most likely due to the state being invalid. This may be due to something changing the request or response in flight.
+- `authcode_validation_error`: Failed to validate the id token or authorization code. This may be due to something changing the request or response in flight.
+- `accesstoken_validation_error`: Failed to validate the id token or access token. This may be due to something changing the request or response in flight.
+- `unknown_error`: This error occurs if the library does not know how to categorize the error. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
+
+If you observe an error code that is not in the list above [please open an issue](https://github.com/veracity/node-auth/issues) on our GitHub page.
