@@ -16,6 +16,7 @@ It is highly recommended that you use a TypeScript aware IDE when using this lib
 - [Quick Start](#quick-start)
   * [Using the helper function](#using-the-helper-function)
   * [Using the passport strategy](#using-the-passport-strategy)
+- [Passing state](#passing-state)
 - [Authentication process](#authentication-process)
 - [API](#api)
   * [VeracityAuthFlowStrategy options](#veracityauthflowstrategy-options)
