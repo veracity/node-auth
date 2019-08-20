@@ -22,8 +22,10 @@ setupAuthFlowStrategy({
 	}
 })
 
+app.use(express.static("public"))
+
 // The root endpoint will return our user data so we can inspect it.
-app.get("/", (req, res) => {
+app.get("/user", (req, res) => {
 	res.send(req.user)
 })
 
