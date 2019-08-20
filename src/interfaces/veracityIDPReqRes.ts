@@ -1,10 +1,9 @@
 // tslint:disable: max-line-length
-/**
- * This file contains interfaces for all the responses expected from the Veracity IDP
- * Refs:
- * https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code#error-codes-for-authorization-endpoint-errors
- * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oidc
- */
+//
+// This file contains interfaces for all the responses expected from the Veracity IDP
+// Refs:
+// https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code#error-codes-for-authorization-endpoint-errors
+// https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oidc
 
 /**
  * Describes the known error codes that b2c may return in a failed response.
@@ -16,7 +15,16 @@ export type VIDPErrorCodes =
 	"unsupported_response_type" |
 	"server_error" |
 	"temporarily_unavailable" |
-	"invalid_resource"
+	"invalid_resource" |
+
+	// The below error types are produced by the library itself
+	"setting_error" |
+	"missing_dependency" |
+	"unknown_response" |
+	"response_validation_error" |
+	"authcode_validation_error" |
+	"accesstoken_validation_error" |
+	"unknown_error"
 
 /**
  * Describes a successful login response from b2c containing the authorization code.
