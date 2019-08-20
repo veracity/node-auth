@@ -170,7 +170,7 @@ app.get("/login", passport.authenticate("veracity"))
 // Set up the return endpoint the user is redirected back to after logging in
 // This must match the path section of the reply url you configured above e.g.: /auth/oidc/loginreturn
 app.post("[path section of replyUrl]", bodyParser.urlencoded({extended: true}), passport.authenticate("veracity"), (req, res) => {
-	res.redirect("/") // This is called once login has completed. Routes you back to the root of the application
+	res.redirect("/") // This is called once login has completed. Routes the user back to the root of the application
 })
 ```
 
