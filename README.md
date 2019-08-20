@@ -36,7 +36,7 @@ const {setupAuthFlowStrategy} = require("@veracity/node-auth/helpers")
 
 const app = express() // Create our app instance
 
-setupAuthFlowStrategy({
+const settings = {
 	appOrRouter: app,
 	loginPath: "/login",
 	strategySettings: { // These settings comes from the Veracity for Developers application credential
@@ -49,6 +49,7 @@ setupAuthFlowStrategy({
 		store: new MemoryStore() // We use a memory store here for development purposes, this is not suitable for production code.
 	}
 })
+setupAuthFlowStrategy(settings)
 
 app.get("/", (req, res) => {
 	res.send(req.user) // Log the user object for debugging purposes
@@ -60,6 +61,25 @@ app.listen(3000, () => {
 ```
 
 That's it. You should now be able to authenticate with Veracity using your application. It will automatically retrieve an access token for you for communicating with the Veracity Service API and store everything on the `req.user` object.
+
+The helper function will automatically register two response handlers on your application:
+
+```javascript
+const settings = {
+	// ... other settings are omitted for brevity
+	loginPath: "/login",
+	strategySettings: {
+		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
+	}
+}
+
+app.get(settings.loginPath, ...) // A GET handler on the "loginPath" setting to begin authentication
+app.post(settings.strategySettings.replyUrl, ...) // A POST handler on the *path segment* of the replyUrl. It handles users returning from the login page.
+
+// These are the equivalent paths when written out
+app.get("/login", ...)
+app.post("/auth/oidc/loginreturn", ...)
+```
 
 **HTTPS**
 
