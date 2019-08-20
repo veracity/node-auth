@@ -30,7 +30,7 @@ export interface IVeracityTokenData {
 	 */
 	accessTokenExpires: number
 	/**
-	 * The lifetime of the access token in milliseconds.
+	 * The lifetime of the access token in seconds.
 	 */
 	accessTokenLifetime: number
 

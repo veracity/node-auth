@@ -18,8 +18,9 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	appOrRouter: Router
 	/**
 	 * Specify the url path where users can log in. E.g.: /auth/login
+	 * @default "/login"
 	 */
-	loginPath: string
+	loginPath?: string
 
 	/**
 	 * Define all required settings to set up the Veracity authentication strategy.
@@ -33,16 +34,19 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	/**
 	 * A handler that is run before the login process begins.
 	 * Note that this handler MUST call next() in order to continue the login process.
+	 * @default function Passthrough function
 	 */
 	onBeforeLogin?: RequestHandler
 	/**
 	 * A function that is called once the user has completely logged in.
 	 * Here you can specify how the user object will look when it's attached to req.user
+	 * @default function Passthrough that stores everything
 	 */
 	onVerify?: VerifierFunction<TUser>
 	/**
 	 * The handler to call when the login has completed.
-	 * Defaults to handler that redirects you to whatever was sent in the returnTo query parameter or to "/".
+	 * Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
+	 * @default function
 	 */
 	onLoginComplete?: RequestHandler
 }
@@ -72,7 +76,7 @@ const getUrlPath = (absoluteUrl: string) => {
 export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOptions) => {
 	const {
 		appOrRouter: app,
-		loginPath,
+		loginPath = "/login",
 		strategySettings,
 		sessionSettings,
 		onBeforeLogin = (req: any, res: any, next: any) => {next()},

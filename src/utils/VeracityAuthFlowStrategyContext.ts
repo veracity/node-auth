@@ -261,10 +261,16 @@ export class VeracityAuthFlowStrategyContext {
 
 	private restoreStateOnRequset() {
 		if (this.session.data.queryParams) {
-			this.req.query = this.session.data.queryParams
+			this.req.query = {
+				...this.req.query,
+				...this.session.data.queryParams
+			}
 		}
 		if (this.session.data.veracityAuthState) {
-			(this.req as any).veracityAuthState = this.session.data.veracityAuthState
+			(this.req as any).veracityAuthState = {
+				...((this.req as any).veracityAuthState || {}),
+				...this.session.data.veracityAuthState
+			}
 		}
 	}
 	private regenerateNonce() {
