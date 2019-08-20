@@ -2,8 +2,7 @@
 const express = require("express")
 const https = require("https")
 const { MemoryStore } = require("express-session")
-const { setupAuthFlowStrategy } = require("@veracity/node-auth/helpers")
-const { generateCertificate } = require("@veracity/node-auth/utils/generateCertificate")
+const { setupAuthFlowStrategy, generateCertificate } = require("@veracity/node-auth/helpers")
 
 // Create our express instance
 const app = express()
