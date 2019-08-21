@@ -9,6 +9,11 @@ export interface IVeracityAuthFlowStrategySettings {
 	 * @default "B2C_1A_SignInWithADFSIdp"
 	 */
 	policy?: string
+	/**
+	 * Where to redirect the user after logging out. You should not set this unless you know what you're doing
+	 * @default "https://www.veracity.com/auth/logout"
+	 */
+	logoutRedirectUrl?: string
 
 	/**
 	 * The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
@@ -40,4 +45,5 @@ export interface IVeracityAuthFlowStrategySettings {
 export interface IVeracityAuthFlowStrategySettingsRequired extends IVeracityAuthFlowStrategySettings {
 	tenantId: string
 	policy: string
+	logoutRedirectUrl: string
 }

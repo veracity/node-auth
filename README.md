@@ -1,7 +1,5 @@
 # Veracity Authentication library for NodeJS
-This library provides utilities that help with authentication-related operations using the Veracity Identity Provider.
-
-**DISCLAIMER** This package is in alpha and is not yet completed and ready for production use.
+This library provides utilities that help with authentication against the Veracity Identity Provider.
 
 **Current features**
 - Authentication Strategy for PassportJS that performs Authorization Code flow authentication and token exchange for zero or more API tokens.
@@ -10,6 +8,7 @@ This library provides utilities that help with authentication-related operations
 It is highly recommended that you use a TypeScript aware IDE when using this library as much of the documentation is in the form of interfaces. Such IDEs can show detailed documentation as you work making it easier to use this library correctly. We suggest [Visual Studio Code](https://code.visualstudio.com/). The library **does not** require that you write your application using TypeScript.
 
 # Table of contents
+⭐ New in the latest version
 
 <!-- toc -->
 
@@ -19,7 +18,9 @@ It is highly recommended that you use a TypeScript aware IDE when using this lib
 - [Passing state](#passing-state)
 - [Authentication process](#authentication-process)
 - [API](#api)
-  * [VeracityAuthFlowStrategy options](#veracityauthflowstrategy-options)
+  * [VeracityAuthFlowStrategy](#veracityauthflowstrategy)
+  * [⭐Refresh tokens](#%E2%AD%90refresh-tokens)
+  * [⭐Logging out](#%E2%AD%90logging-out)
   * [Verifier / onVerify](#verifier--onverify)
   * [IVeracityTokenData properties (apiTokens)](#iveracitytokendata-properties-apitokens)
   * [setupAuthFlowStrategy options](#setupauthflowstrategy-options)
@@ -57,7 +58,6 @@ const app = express() // Create our app instance
 
 const settings = {
 	appOrRouter: app,
-	loginPath: "/login",
 	strategySettings: { // These settings comes from the Veracity for Developers application credential
 		clientId: "", // Your client id
 		clientSecret: "", // Your client secret
@@ -81,22 +81,24 @@ app.listen(3000, () => {
 
 That's it. You should now be able to authenticate with Veracity using your application. It will automatically retrieve an access token for you for communicating with the Veracity Service API and store everything on the `req.user` object.
 
-The helper function will automatically register two response handlers on your application:
-
+The helper function will automatically register three response handlers on your application.
 ```javascript
 const settings = {
 	// ... other settings are omitted for brevity
 	loginPath: "/login",
+	logoutPath: "/logout",
 	strategySettings: {
 		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
 	}
 }
 
 app.get(settings.loginPath, ...) // A GET handler on the "loginPath" setting to begin authentication
+app.get(settings.logoutPath, ...) // A GET handler on the "logoutPath" setting to log the user out. Uses the strategy instances "logout" method to log the user out.
 app.post(settings.strategySettings.replyUrl, ...) // A POST handler on the *path segment* of the replyUrl. It handles users returning from the login page.
 
 // These are the equivalent paths when written out
 app.get("/login", ...)
+app.get("/logout", ...)
 app.post("/auth/oidc/loginreturn", ...)
 ```
 
@@ -285,21 +287,128 @@ This library provides you with a *strategy* that you can use to perform authenti
 
 ## API
 
-### VeracityAuthFlowStrategy options
+### VeracityAuthFlowStrategy
 ```javascript
-passport.use("veracity", new VeracityAuthFlowStrategy(options, verifier))
+const strategy = new VeracityAuthFlowStrategy(options, verifier)
+passport.use("veracity", strategy)
 ```
+
+**⭐️ New in version 0.2.0**
+The VeracityAuthFlowStrategy contains a few utilities for working with tokens and the Veracity IDP. In addition to handling authentication and token retrival it can also refresh tokens and handle logging the user our correctly.
+
+**options**
 
 - `tenantId` - Default: `a68572e3-63ce-4bc1-acdc-b64943502e9d`. The id of the Veracity IDP. You probably do not need to change this.
 - `policy` - Default: `B2C_1A_SignInWithADFSIdp`. Describes the way you want to authenticate. You probably do not need to change this.
+- `logoutRedirectUrl` - Default: "https://www.veracity.com/auth/logout". Where to redirect the user once they sign out. You are required to redirect users to the default url when logging them out as it will complete the sign out process.
 - `clientId` - This is your applications client id. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
 - `clientSecret` - This is your applications client secret. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
 - `replyUrl` - The URL users are redirected back to after logging in. You can configure this in the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal.
 - `requestRefreshToken` - Default `true`. Set this to true if you want to retrieve a refresh token along with each access token you want. Refresh tokens allow you to request new access tokens once they expire.
 - `apiScopes` - Defaults to scope for Veracity Services API. This is where you configure which scopes you want to acquire access tokens for when users log in. You can specify zero or more scopes depending on your need. If you do not need to call any of the Veracity APIs, but simply wish to use Veracity for authentication set this to an empty array.
 
-### Verifier / onVerify
+### ⭐Refresh tokens
+Access tokens will expire after a short while so your code needs to take this into account and potentially refresh the token before using it to call secure endpoints. You can do this manually if you'd like, but to aid with this process the `VeracityAuthFlowStrategy` instance provides a few helper functions for refreshing access tokens.
 
+If you want to handle token refresh on your own you can read about the protocol [here](https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oidc#refresh-the-token).
+
+**Refresh tokens with middleware**
+
+The easiest way to refresh tokens is to use the middleware helper method `refreshTokenMiddleware` on the `VeracityAuthFlowStrategy` instance. This middleware can be dropped into any request handler chain and will automatically refresh the access token on demand (if the refresh token has not expired).
+
+You need to have three things in order to configure the refresh token middleware:
+- `newTokenHandler` - A handler function that receives the new access token data and should decide what to do with it. Here you will usually update the user object on `req.user` with the new token.
+- `refreshStrategy` - A function that determines whether the token should be refreshed or not. If not provided the token will be refreshed if its remaining lifetime is less than half of its total lifetime.
+- `tokenApiScopeOrResolver` - The token refresh middleware needs to find the actual token to refresh. If your code uses the standardized apiTokens object on `req.user` you can simply specify the api scope url here. Otherwise you will need to provide a function that returns the token data.
+
+```javascript
+// Provided your user object is structured like this:
+/*
+req.user = {
+	apiTokens: {
+		"https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation": {
+			...token data
+		}
+	}
+}
+*/
+// You can pass the scope name and the refresh handler will resolve the token automatically
+
+// Create the strategy instance
+const strategy = new VeracityAuthFlowStrategy(options, verifier)
+// or
+const strategy = setupAuthFlowStrategy({
+	// config
+})
+
+// Define a token handler that updates the user object.
+// Notice that we UPDATE req.user and do not replace it with a new one
+// This ensures that express-session will persist the new data
+const newTokenHandler = (tokenData, req) => {
+	req.user.apiTokens[tokenData.scope] = tokenData
+}
+
+// We can now create a factory function that can refresh any of our tokens
+const refreshTokenMiddleware = strategy.refreshTokenMiddleware(newTokenHandler)
+
+// On an endpoint that calls a secure api we can add the refresh handler the middleware
+// chain to ensure the token is updated (if needed) before our handler is called 
+app.get("/api-call", refreshTokenMiddleware("https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"), (req, res) => {
+	// Call secure api with token
+})
+```
+
+**Refresh tokens with direct token data**
+If you do not wish to use the middleware you can get the refreshed token directly and handle the wrapping yourself. To do this you would call the `getRefreshedToken` method on your `VeracityAuthFlowStrategy` instance. This method takes a `IVeracityTokenData` object and returns a new object with a new id and access token.
+
+```javascript
+// Create the strategy instance
+const strategy = new VeracityAuthFlowStrategy(options, verifier)
+// or
+const strategy = setupAuthFlowStrategy({
+	// config
+})
+
+// Create an endpoint where tokens can be refreshed
+app.get("/refreshToken/:scope", async (req, res, next) => {
+	try {
+		// Get the old token data, this assumes the tokens are stored as IVeracityTokenData objects
+		const oldTokenData = req.user.apiTokens[req.params.scope]
+
+		// Fetch new token data and store the result.
+		req.user.apiTokens[req.params.scope] = await strategy.refreshToken(oldTokenData)
+
+		 // Tell the user everything is fine
+		res.send(ok)
+	} catch (error) {
+		next(error) // If an error occurs pass it to the connect error handler
+	}
+})
+```
+Using the `getRefreshedToken` method allows you to construct any kind of logic you may need around the process, but in most cases it is probably sufficient to simply use the middleware.
+
+### ⭐Logging out
+Logging out users is a relatively simple process: Ensure the users tokens are removed and redirect them to the central logout page. The last step is required by Veracity in order to ensure the user is logged out properly.
+
+The `VeracityAuthFlowStrategy` provides a helper for signing users out that, conveniently, also works as a drop in middleware. If you are using the `setupAuthFlowStrategy` helper function it will register a logout handler for you on the logoutUrl you specify so there is no need to do anything else.
+
+```javascript
+// Create the strategy instance
+const strategy = new VeracityAuthFlowStrategy(options, verifier)
+
+// You can use the logout method directly as a middleware
+app.get("/logout", strategy.logout)
+
+// Or you can call it while performing your own logic
+app.get("/logout", (req, res) => {
+	// Do your own logic here
+
+	// Finally call logout. It will redirect the user to the proper logout endpoint.
+	strategy.logout(req, res)
+})
+```
+
+### Verifier / onVerify
 The verifier function is commonly used by `passport` to look up the user and verify that they are registered with the system. Since you are using Veracity as your Identity Provider you can assume that if this function is called the user is indeed registered and valid. Instead you may use this function to augment the user object with data from other internal systems or databases.
 
 The verifier is passed as the second argument to the strategy or, if you are using the helper `setupAuthFlowStrategy` as the `onVerify` option.
@@ -350,13 +459,14 @@ For a list of all returned claims in the ID and access tokens, see the file `ver
 - `refreshTokenExpires` - The unix timestamp when the refresh token expires.
 
 ### setupAuthFlowStrategy options
-- `appOrRouter` The express application instance or router you wish to configure.
-- `loginPath` Default: "/login". The path in your application users should visit to log in.
-- `strategySettings` The settings for VeracityAuthFlowStrategy (see above)
-- `sessionSettings` Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
-- `onBeforeLogin` An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
-- `onVerify` Default: Handler that passes all data from the authentcation over to `req.user`. The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed.
-- `onLoginComplete` Default: Handler that will redirect to "/" or to the url in query parameter `returnTo` from the login request if present. An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
+- `appOrRouter` - The express application instance or router you wish to configure.
+- `loginPath` - Default: "/login". The path in your application users should visit to log in.
+- `logoutPath` - Default: "/logout". The path in your application users should visit to log out.
+- `strategySettings` - The settings for VeracityAuthFlowStrategy (see above)
+- `sessionSettings` - Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
+- `onBeforeLogin` - An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
+- `onVerify` - Default: Handler that passes all data from the authentcation over to `req.user`. The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed.
+- `onLoginComplete` - Default: Handler that will redirect to "/" or to the url in query parameter `returnTo` from the login request if present. An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
 
 ## Error handling
 Any error that occurs within a strategy provided by this library will be an instance of a `VIPDError`. VIDPError objects are extensions of regular Error objects that contain additional information about what type of error occured. Using this information you can decide how to proceed.
@@ -398,6 +508,8 @@ These types are thrown by the library:
 - `response_validation_error` - The response from the IDP was invalid. Most likely due to the state being invalid. This may be due to something changing the request or response in flight.
 - `authcode_validation_error` - Failed to validate the id token or authorization code. This may be due to something changing the request or response in flight.
 - `accesstoken_validation_error` - Failed to validate the id token or access token. This may be due to something changing the request or response in flight.
+- `unsupported_context` - The function you attempted to use relies on the context (usually the `req` object) having some properties or being in a certain state. This error is thrown if the context is not in a supported state for the function you called.
+- `token_expired` - This error is thrown if you perform an operation with an expired token. This can be utilizing a token through a helper or attempting to refresh an access token using an expired refresh token.
 - `unknown_error` - This error occurs if the library does not know how to categorize the error. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
 
 If you observe an error code that is not in the list above [please open an issue](https://github.com/veracity/node-auth/issues) on our GitHub page.

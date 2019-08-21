@@ -26,7 +26,11 @@ export interface IVeracityTokenData {
 	 */
 	accessTokenDecoded: IVeracityAccessTokenPayload
 	/**
-	 * The epoch timestamp when the access token expires.
+	 * The timestamp when the access token was issued.
+	 */
+	accessTokenIssued: number
+	/**
+	 * The timestamp when the access token expires.
 	 */
 	accessTokenExpires: number
 	/**

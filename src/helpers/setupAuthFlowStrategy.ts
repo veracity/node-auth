@@ -21,6 +21,11 @@ export interface ISetupAuthFlowOptions<TUser = any> {
 	 * @default "/login"
 	 */
 	loginPath?: string
+	/**
+	 * Specify the url path where users can log out
+	 * @default "/logout"
+	 */
+	logoutPath?: string
 
 	/**
 	 * Define all required settings to set up the Veracity authentication strategy.
@@ -72,11 +77,13 @@ const getUrlPath = (absoluteUrl: string) => {
  * - body-parser
  *
  * They are set as optional dependencies of this library.
+ * @return Returns the strategy instance
  */
 export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOptions) => {
 	const {
 		appOrRouter: app,
 		loginPath = "/login",
+		logoutPath = "/logout",
 		strategySettings,
 		sessionSettings,
 		onBeforeLogin = (req: any, res: any, next: any) => {next()},
@@ -91,7 +98,8 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 	app.use(passport.initialize())
 	app.use(passport.session())
 
-	passport.use(name, new VeracityAuthFlowStrategy<TUser>(strategySettings, onVerify))
+	const strategy = new VeracityAuthFlowStrategy<TUser>(strategySettings, onVerify)
+	passport.use(name, strategy)
 	passport.serializeUser((user, done) => { done(null, user) })
 	passport.deserializeUser((id, done) => { done(null, id) })
 
@@ -106,4 +114,7 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 		bodyParser.urlencoded({extended: true}),
 		passport.authenticate(name),
 		onLoginComplete)
+	app.get(logoutPath, strategy.logout)
+
+	return strategy
 }

@@ -24,6 +24,8 @@ export type VIDPErrorCodes =
 	"response_validation_error" |
 	"authcode_validation_error" |
 	"accesstoken_validation_error" |
+	"unsupported_context" |
+	"token_expired" |
 	"unknown_error"
 
 /**
@@ -68,6 +70,18 @@ export interface IVIDPAuthorizationCodeExchangeResponseFailure {
 	error_description: string
 }
 
+export interface IVIDPRefreshTokenResponseSuccess {
+	access_token: string
+	expires_in: string
+	expires_on: string
+	id_token: string
+	id_token_expires_in: string
+	not_before: string
+	profile_info: string
+	resource: string
+	token_type: "Bearer"
+}
+
 /**
  * Describes the parameters required in the url of a request to log a user in.
  * These should be sent as url encoded query parameters.
@@ -92,6 +106,19 @@ export interface IVIDPAccessTokenRequestParameters {
 	scope: string
 	code: string
 	redirect_uri: string
+}
+
+/**
+ * Describes the parameters needed to refresh a token.
+ */
+export interface IVIDPRefreshTokenRequestParameters {
+	grant_type: "refresh_token"
+	client_id: string
+	client_secret: string
+	refresh_token: string
+	redirect_uri: string
+	scope: string
+	nonce: string
 }
 
 export const isVIDPLoginResponse = (obj: any): obj is IVIDPLoginResponseSuccess => !!(
