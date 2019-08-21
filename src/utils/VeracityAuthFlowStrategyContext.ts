@@ -1,4 +1,4 @@
-import { Request } from "express"
+import { Request } from "express-serve-static-core"
 import { VIDPError } from "../auth/errors/VIDPError"
 import {
 	isVIDPLoginResponse,
@@ -387,6 +387,7 @@ export class VeracityAuthFlowStrategyContext {
 			idTokenDecoded: data.idTokenDecoded.payload,
 			accessToken: data.accessToken,
 			accessTokenDecoded: data.accessTokenDecoded.payload,
+			accessTokenIssued: data.accessTokenDecoded.payload.iat,
 			accessTokenExpires: data.accessTokenDecoded.payload.exp,
 			accessTokenLifetime: parseInt(data.expires_in, 10),
 			scope: apiScope
@@ -395,7 +396,7 @@ export class VeracityAuthFlowStrategyContext {
 		if (data.refresh_token) {
 			tokenData.refreshToken = data.refresh_token
 			tokenData.refreshTokenExpires = data.refresh_token_expires_in ?
-				parseInt(data.refresh_token_expires_in, 10) : undefined
+				Math.round((Date.now()/1000) + parseInt(data.refresh_token_expires_in, 10)) : undefined
 		}
 
 		return {
