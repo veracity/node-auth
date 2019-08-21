@@ -1,4 +1,4 @@
-// First we import the dependencies we need
+// Import the dependencies we need
 const express = require("express")
 const https = require("https")
 const { MemoryStore } = require("express-session")
