@@ -1,6 +1,6 @@
 {
   "name": "@veracity/node-auth",
-  "version": "0.0.1-alpha",
+  "version": "0.2.0-beta",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
     "build:make-toc": "markdown-toc -i README.md",
