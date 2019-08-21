@@ -114,10 +114,7 @@ export const setupAuthFlowStrategy = <TUser = any>(options: ISetupAuthFlowOption
 		bodyParser.urlencoded({extended: true}),
 		passport.authenticate(name),
 		onLoginComplete)
-	app.get(logoutPath, (req, res) => {
-		req.logout()
-		res.redirect("https://www.veracity.com/auth/logout")
-	})
+	app.get(logoutPath, strategy.logout)
 
 	return strategy
 }

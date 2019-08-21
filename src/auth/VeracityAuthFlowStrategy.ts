@@ -53,6 +53,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		this.settings = {
 			tenantId: "a68572e3-63ce-4bc1-acdc-b64943502e9d",
 			policy: "B2C_1A_SignInWithADFSIdp",
+			logoutRedirectUrl: "https://www.veracity.com/auth/logout",
 			apiScopes: ["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"],
 			requestRefreshTokens: true,
 			...settings
@@ -140,7 +141,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		}
 
 		try {
-			const newTokenData = await this.getRefreshToken(tokenData)
+			const newTokenData = await this.getRefreshedToken(tokenData)
 			return newTokenData
 		} catch (error) {
 			if (!(error instanceof VIDPError)) {
@@ -149,8 +150,16 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			throw error
 		}
 	}
+	/**
+	 * Log the user out by calling req.logout and redirecting them to the logout page on
+	 * Veracity to complete the process.
+	 */
+	public logout = (req: Request, res: Response) => {
+		req.logout()
+		res.redirect("https://www.veracity.com/auth/logout")
+	}
 
-	private async getRefreshToken(tokenData: IVeracityTokenData) {
+	private async getRefreshedToken(tokenData: IVeracityTokenData) {
 		const {tenantId, policy, clientId, clientSecret, replyUrl} = this.settings
 		const metadata = await getVeracityAuthMetadata({tenantId, policy})
 		const nonce = createUid()
