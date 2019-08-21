@@ -9,7 +9,6 @@ const app = express()
 
 setupAuthFlowStrategy({
 	appOrRouter: app,
-	loginPath: "/login",
 	strategySettings: { // Fill these in with values from your Application Credential
 		clientId: "",
 		clientSecret: "",

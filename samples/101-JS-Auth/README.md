@@ -1,7 +1,7 @@
 # JS Helper example
 This example implements Veracity authentication using the `setupAuthFlowStrategy` helper function. For details see the `start.js` file.
 
-You need to fill in application credentials on line 15-17 in `start.js` before this sample will run. Visit the [Veracity for Developers project portal](https://developer.veracity.com/projects) to create them.
+You need to fill in application credentials on line 14-16 in `start.js` before this sample will run. Visit the [Veracity for Developers project portal](https://developer.veracity.com/projects) to create them.
 
 To run the example:
 ```javascript
