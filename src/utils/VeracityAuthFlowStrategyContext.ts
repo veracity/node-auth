@@ -247,8 +247,9 @@ export class VeracityAuthFlowStrategyContext {
 	 * or access tokens.
 	 * @param idToken
 	 */
-	private async getValidationOptions(idToken: string): Promise<IValidationOptions> {
-		const meta = await this.getClosestMetadata()
+	private async getValidationOptions(
+		idToken: string, metadata?: IVeracityAuthMetadataWithJWKs): Promise<IValidationOptions> {
+		const meta = metadata || await this.getClosestMetadata()
 
 		return {
 			clientId: this.strategySettings.clientId,
@@ -302,8 +303,8 @@ export class VeracityAuthFlowStrategyContext {
 		})
 		return JSON.parse(accessTokenRawResponse) as IVIDPAuthorizationCodeExchangeResponseSuccess
 	}
-	private async validateAccessToken(idToken: string, accessToken: string) {
-		const validationOptions = await this.getValidationOptions(idToken)
+	private async validateAccessToken(idToken: string, accessToken: string, validationOptions?: IValidationOptions) {
+		validationOptions = validationOptions || await this.getValidationOptions(idToken)
 		try {
 			return validateIDTokenAndAccessToken(accessToken, validationOptions)
 		} catch (error) {

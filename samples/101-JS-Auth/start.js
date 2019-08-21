@@ -10,7 +10,7 @@ const app = express()
 setupAuthFlowStrategy({
 	appOrRouter: app,
 	loginPath: "/login",
-	strategySettings: { // Fill these inn with values from your Application Credential
+	strategySettings: { // Fill these in with values from your Application Credential
 		clientId: "",
 		clientSecret: "",
 		replyUrl: ""
@@ -25,7 +25,10 @@ app.use(express.static("public"))
 
 // The root endpoint will return our user data so we can inspect it.
 app.get("/user", (req, res) => {
-	res.send(req.user)
+	if (req.isAuthenticated()) {
+		res.send(req.user)
+	}
+	res.status(401).send("Unauthorized")
 })
 
 // Set up the HTTPS development server

@@ -1,7 +1,5 @@
 # Veracity Authentication library for NodeJS
-This library provides utilities that help with authentication-related operations using the Veracity Identity Provider.
-
-**DISCLAIMER** This package is in alpha and is not yet completed and ready for production use.
+This library provides utilities that help with authentication against the Veracity Identity Provider.
 
 **Current features**
 - Authentication Strategy for PassportJS that performs Authorization Code flow authentication and token exchange for zero or more API tokens.
@@ -56,7 +54,6 @@ const app = express() // Create our app instance
 
 const settings = {
 	appOrRouter: app,
-	loginPath: "/login",
 	strategySettings: { // These settings comes from the Veracity for Developers application credential
 		clientId: "", // Your client id
 		clientSecret: "", // Your client secret
@@ -80,18 +77,19 @@ app.listen(3000, () => {
 
 That's it. You should now be able to authenticate with Veracity using your application. It will automatically retrieve an access token for you for communicating with the Veracity Service API and store everything on the `req.user` object.
 
-The helper function will automatically register two response handlers on your application:
-
+The helper function will automatically register three response handlers on your application.
 ```javascript
 const settings = {
 	// ... other settings are omitted for brevity
 	loginPath: "/login",
+	logoutPath: "/logout",
 	strategySettings: {
 		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
 	}
 }
 
 app.get(settings.loginPath, ...) // A GET handler on the "loginPath" setting to begin authentication
+app.get(settings.logoutPath, ...) // A GET handler on the "logoutPath" setting to log the user out. Calls req.logout() to log passport out.
 app.post(settings.strategySettings.replyUrl, ...) // A POST handler on the *path segment* of the replyUrl. It handles users returning from the login page.
 
 // These are the equivalent paths when written out
@@ -349,13 +347,14 @@ For a list of all returned claims in the ID and access tokens, see the file `ver
 - `refreshTokenExpires` - The unix timestamp when the refresh token expires.
 
 ### setupAuthFlowStrategy options
-- `appOrRouter` The express application instance or router you wish to configure.
-- `loginPath` Default: "/login". The path in your application users should visit to log in.
-- `strategySettings` The settings for VeracityAuthFlowStrategy (see above)
-- `sessionSettings` Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
-- `onBeforeLogin` An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
-- `onVerify` Default: Handler that passes all data from the authentcation over to `req.user`. The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed.
-- `onLoginComplete` Default: Handler that will redirect to "/" or to the url in query parameter `returnTo` from the login request if present. An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
+- `appOrRouter` - The express application instance or router you wish to configure.
+- `loginPath` - Default: "/login". The path in your application users should visit to log in.
+- `logoutPath` - Default: "/logout". The path in your application users should visit to log out.
+- `strategySettings` - The settings for VeracityAuthFlowStrategy (see above)
+- `sessionSettings` - Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
+- `onBeforeLogin` - An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
+- `onVerify` - Default: Handler that passes all data from the authentcation over to `req.user`. The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed.
+- `onLoginComplete` - Default: Handler that will redirect to "/" or to the url in query parameter `returnTo` from the login request if present. An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
 
 ## Error handling
 Any error that occurs within a strategy provided by this library will be an instance of a `VIPDError`. VIDPError objects are extensions of regular Error objects that contain additional information about what type of error occured. Using this information you can decide how to proceed.
@@ -397,6 +396,8 @@ These types are thrown by the library:
 - `response_validation_error` - The response from the IDP was invalid. Most likely due to the state being invalid. This may be due to something changing the request or response in flight.
 - `authcode_validation_error` - Failed to validate the id token or authorization code. This may be due to something changing the request or response in flight.
 - `accesstoken_validation_error` - Failed to validate the id token or access token. This may be due to something changing the request or response in flight.
+- `unsupported_context` - The function you attempted to use relies on the context (usually the `req` object) having some properties or being in a certain state. This error is thrown if the context is not in a supported state for the function you called.
+- `token_expired` - This error is thrown if you perform an operation with an expired token. This can be utilizing a token through a helper or attempting to refresh an access token using an expired refresh token.
 - `unknown_error` - This error occurs if the library does not know how to categorize the error. If this error occurs there may be a bug in the library. Please [open an issue](https://github.com/veracity/node-auth/issues).
 
 If you observe an error code that is not in the list above [please open an issue](https://github.com/veracity/node-auth/issues) on our GitHub page.
