@@ -210,7 +210,8 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			return resolverOrName(req)
 		}
 		if (!req.user || !req.user.apiTokens) {
-			throw new VIDPError("unsupported_context")
+			throw new VIDPError("unsupported_context",
+				`Unable to resolve token from "req.user". The object does not exist or has no api tokens on "req.user.apiTokens"`)
 		}
 		return req.user.apiTokens[resolverOrName] as IVeracityTokenData
 	}

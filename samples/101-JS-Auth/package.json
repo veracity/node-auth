@@ -21,7 +21,7 @@
   },
   "homepage": "https://www.veracity.com",
   "dependencies": {
-    "@veracity/node-auth": "0.1.0-beta",
+    "@veracity/node-auth": "^0.2.0-beta",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",

@@ -7,7 +7,8 @@ const { setupAuthFlowStrategy, generateCertificate } = require("@veracity/node-a
 // Create our express instance
 const app = express()
 
-setupAuthFlowStrategy({
+// Create the strategy object and configure it
+const strategy = setupAuthFlowStrategy({
 	appOrRouter: app,
 	strategySettings: { // Fill these in with values from your Application Credential
 		clientId: "",
@@ -20,15 +21,37 @@ setupAuthFlowStrategy({
 	}
 })
 
-app.use(express.static("public"))
+// Construct the refresh token middleware factory.
+// Using this we can refresh any token
+const createRefreshTokenMiddleware = strategy.refreshTokenMiddleware((tokenData, req) => {
+	req.user.apiTokens = { // Put the new token data onto the user object so it's stored in session
+		[tokenData.scope]: tokenData
+	}
+}, () => true) // This refresh strategy will allways refresh the token
 
-// The root endpoint will return our user data so we can inspect it.
+// strategy.settings.apiScopes[0] is the Services API scope
+const refreshServicesToken = createRefreshTokenMiddleware(strategy.settings.apiScopes[0])
+
+// This endpoint will return our user data so we can inspect it.
 app.get("/user", (req, res) => {
 	if (req.isAuthenticated()) {
 		res.send(req.user)
+		return
 	}
 	res.status(401).send("Unauthorized")
 })
+
+// Create the refresh token endpoint
+app.get("/refresh", refreshServicesToken, (req, res) => {
+	res.send({
+		updated: Date.now(),
+		user: req.user
+	})
+})
+
+
+// Serve static content from the public folder so we can display the index.html page
+app.use(express.static("public"))
 
 // Set up the HTTPS development server
 const server = https.createServer({

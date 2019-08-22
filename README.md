@@ -366,7 +366,7 @@ If you do not wish to use the middleware you can get the refreshed token directl
 const strategy = new VeracityAuthFlowStrategy(options, verifier)
 // or
 const strategy = setupAuthFlowStrategy({
-	// config
+// config
 })
 
 // Create an endpoint where tokens can be refreshed
