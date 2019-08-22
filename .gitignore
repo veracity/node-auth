@@ -63,4 +63,8 @@ typings/
 # Ignore local test folder
 src/localtest
 
+# Ignore dist folder since it is generated
 dist
+
+# Ignore lock files in samples
+samples/**/package-lock.json
