@@ -19,8 +19,8 @@ It is highly recommended that you use a TypeScript aware IDE when using this lib
 - [Authentication process](#authentication-process)
 - [API](#api)
   * [VeracityAuthFlowStrategy](#veracityauthflowstrategy)
-  * [⭐Refresh tokens](#%E2%AD%90refresh-tokens)
-  * [⭐Logging out](#%E2%AD%90logging-out)
+  * [Refresh tokens](#refresh-tokens)
+  * [Logging out](#logging-out)
   * [Verifier / onVerify](#verifier--onverify)
   * [IVeracityTokenData properties (apiTokens)](#iveracitytokendata-properties-apitokens)
   * [setupAuthFlowStrategy options](#setupauthflowstrategy-options)
@@ -285,6 +285,30 @@ The authentication process used by Veracity is called *Open ID Connect* with tok
 
 This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build cool applications.
 
+## Recommended standard structure
+This library does not require you to structure your user object in a specific way. However, several of the provided utilities may become easier to use if you do. If you are using the `setupAuthFlowStrategy` function to configure authentication in your library it will also use this standard structure for the user object. It does not prevent you from adding additional properties to the user object, but it does define some defaults that work well with the other library utilites.
+
+### Standard structure for user objects
+The default structure for user objects on `req.user` when you use `setupAuthFlowStrategy` is basically to copy the verifier options argument directly onto it. This object is defined by the `IVeracityAuthFlowStrategyVerifierOptions` and is an object with the following properties:
+
+- `idToken` - string - The raw ID token provided by the last authorization code exchange or, if you define no api scopes, the initial returned id token.
+- `idTokenDecoded` - IVeracityIDTokenPayload - The decoded payload of the id token provided in `idToken`.
+- `apiTokens` - Object - An object where each key is an api scope and the values are `IVeracityTokenData` objects.
+
+### Standard structure for token data
+The token data object consists of a set of properties containing information about all token information related to one specific api scope. It is defined by the interface `IVeracityTokenData` and contains the following properties:
+
+- `scope` - string - The name of the scope this token data contains information about
+- `idToken` - string - The specific id token returned when exchanging an authorization code for an access token for this scope.
+- `idTokenDecoded` - IVeracityIDTokenPayload - The decoded payload of the associated id token.
+- `accessToken` - string - The raw access token for this api scope. This is what you send to APIs to authenticate the user.
+- `accessTokenDecoded` - IVeracityAccessTokenPayload - The decoded payload of the access token for this scope.
+- `accessTokenIssued` - number - A timestamp for when the access token was issued (in seconds).
+- `accessTokenExpires` - number - The timestamp for when the access token expires (in seconds).
+- `accessTokenLifetime` - number - The total lifetime of the access token in seconds.
+- `refreshToken` - string - The raw refresh token for this scope. This will only be present if you configured the strategy to ask for refresh tokens.
+- `refreshTokenExpires` - number - The timestamp for when the refresh token expires (in seconds).
+
 ## API
 
 ### VeracityAuthFlowStrategy
@@ -307,7 +331,7 @@ The VeracityAuthFlowStrategy contains a few utilities for working with tokens an
 - `requestRefreshToken` - Default `true`. Set this to true if you want to retrieve a refresh token along with each access token you want. Refresh tokens allow you to request new access tokens once they expire.
 - `apiScopes` - Defaults to scope for Veracity Services API. This is where you configure which scopes you want to acquire access tokens for when users log in. You can specify zero or more scopes depending on your need. If you do not need to call any of the Veracity APIs, but simply wish to use Veracity for authentication set this to an empty array.
 
-### ⭐Refresh tokens
+### Refresh tokens
 Access tokens will expire after a short while so your code needs to take this into account and potentially refresh the token before using it to call secure endpoints. You can do this manually if you'd like, but to aid with this process the `VeracityAuthFlowStrategy` instance provides a few helper functions for refreshing access tokens.
 
 If you want to handle token refresh on your own you can read about the protocol [here](https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oidc#refresh-the-token).
@@ -387,7 +411,7 @@ app.get("/refreshToken/:scope", async (req, res, next) => {
 ```
 Using the `getRefreshedToken` method allows you to construct any kind of logic you may need around the process, but in most cases it is probably sufficient to simply use the middleware.
 
-### ⭐Logging out
+### Logging out
 Logging out users is a relatively simple process: Ensure the users tokens are removed and redirect them to the central logout page. The last step is required by Veracity in order to ensure the user is logged out properly.
 
 The `VeracityAuthFlowStrategy` provides a helper for signing users out that, conveniently, also works as a drop in middleware. If you are using the `setupAuthFlowStrategy` helper function it will register a logout handler for you on the logoutUrl you specify so there is no need to do anything else.

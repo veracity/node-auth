@@ -156,7 +156,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 	 */
 	public logout = (req: Request, res: Response) => {
 		req.logout()
-		res.redirect("https://www.veracity.com/auth/logout")
+		res.redirect(this.settings.logoutRedirectUrl)
 	}
 
 	private async getRefreshedToken(tokenData: IVeracityTokenData) {
