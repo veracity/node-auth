@@ -2,7 +2,7 @@ import {
 	IVIDPAuthorizationCodeExchangeResponseFailure,
 	IVIDPLoginResponseFailure,
 	VIDPErrorCodes
-} from "../../interfaces"
+} from "../../internalInterfaces/veracityIDPReqRes"
 
 export class VIDPError extends Error {
 	public details: {

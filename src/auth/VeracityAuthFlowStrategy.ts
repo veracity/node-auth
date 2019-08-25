@@ -1,13 +1,15 @@
 import { NextFunction, Request, Response } from "express-serve-static-core"
 import { Strategy, StrategyCreatedStatic } from "passport"
+import { IVeracityAuthFlowStrategySettings } from "../interfaces/IVeracityAuthFlowStrategySettings"
+import { VerifierFunction } from "../interfaces/IVeracityAuthFlowStrategyVerifierOptions"
+import { IVeracityTokenData } from "../interfaces/IVeracityTokenData"
 import {
-	IVeracityAuthFlowStrategySettings,
-	IVeracityAuthFlowStrategySettingsRequired,
-	IVeracityTokenData,
+	IVeracityAuthFlowStrategySettingsRequired
+} from "../internalInterfaces/IVeracityAuthFlowStrategySettingsRequired"
+import {
 	IVIDPRefreshTokenRequestParameters,
-	IVIDPRefreshTokenResponseSuccess,
-	VerifierFunction
-} from "../interfaces"
+	IVIDPRefreshTokenResponseSuccess
+} from "../internalInterfaces/veracityIDPReqRes"
 import { createUid } from "../utils/createUid"
 import getVeracityAuthMetadata from "../utils/getVeracityAuthMetadata"
 import { request } from "../utils/request"

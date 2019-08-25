@@ -1,12 +1,6 @@
 // Known claims: https://www.iana.org/assignments/jwt/jwt.xhtml
 
-export interface IVeracityTokenHeader {
-	typ: string
-	alg: string
-	kid: string
-}
-
-interface ICommonClaims {
+export interface ICommonClaims {
 	iss: string
 	sub: "Not supported currently. Use oid claim."
 	aud: string
@@ -22,8 +16,20 @@ interface ICommonClaims {
 	ver: "1.0"
 }
 
+export interface IVeracityTokenHeader {
+	typ: string
+	alg: string
+	kid: string
+}
+
 export interface IVeracityIDTokenPayload extends ICommonClaims {
+	/**
+	 * Hash of the Authorization code.
+	 */
 	c_hash?: string
+	/**
+	 * Hash of the access token.
+	 */
 	at_hash?: string
 	acr: string
 

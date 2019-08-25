@@ -1,21 +1,21 @@
 import { Request } from "express-serve-static-core"
 import { VIDPError } from "../auth/errors/VIDPError"
+import { IVeracityTokenData } from "../interfaces/IVeracityTokenData"
+import { IVeracityAccessToken, IVeracityIDToken, IVeracityIDTokenPayload } from "../interfaces/veracityTokens"
+import {
+	IVeracityAuthFlowStrategySettingsRequired
+} from "../internalInterfaces/IVeracityAuthFlowStrategySettingsRequired"
 import {
 	isVIDPLoginResponse,
 	isVIDPResponseFailure,
-	IVeracityAccessToken,
-	IVeracityAuthFlowStrategySettingsRequired,
 	IVeracityAuthMetadataWithJWKs,
-	IVeracityIDToken,
-	IVeracityIDTokenPayload,
-	IVeracityTokenData,
 	IVIDPAccessTokenRequestParameters,
 	IVIDPAuthorizationCodeExchangeResponseFailure,
 	IVIDPAuthorizationCodeExchangeResponseSuccess,
 	IVIDPLoginRequestParamaters,
 	IVIDPLoginResponseFailure,
 	IVIDPLoginResponseSuccess
-} from "../interfaces"
+} from "../internalInterfaces/veracityIDPReqRes"
 import { createUid } from "./createUid"
 import getVeracityAuthMetadata from "./getVeracityAuthMetadata"
 import request from "./request"

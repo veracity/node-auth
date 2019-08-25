@@ -1,4 +1,4 @@
-import { IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../interfaces"
+import { IVeracityAuthMetadataWithJWKs, IVeracityJWKWithPEM } from "../internalInterfaces/veracityIDPReqRes"
 import { generatePEM } from "./generatePEM"
 import request from "./request"
 

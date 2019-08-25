@@ -16,7 +16,19 @@ It is highly recommended that you use a TypeScript aware IDE when using this lib
   * [Using the helper function](#using-the-helper-function)
   * [Using the passport strategy](#using-the-passport-strategy)
 - [Passing state](#passing-state)
+- [Data structures](#data-structures)
+  * [IVeracityAuthFlowStrategySettings](#iveracityauthflowstrategysettings)
+  * [IVeracityAuthFlowStrategyVerifierOptions](#iveracityauthflowstrategyverifieroptions)
+  * [IVeracityTokenData](#iveracitytokendata)
+  * [IVeracityTokenHeader](#iveracitytokenheader)
+  * [IVeracityIDTokenPayload](#iveracityidtokenpayload)
+  * [IVeracityAccessTokenPayload](#iveracityaccesstokenpayload)
+  * [IVeracityIDToken](#iveracityidtoken)
+  * [IVeracityAccessToken](#iveracityaccesstoken)
 - [Authentication process](#authentication-process)
+- [Recommended standard structure](#recommended-standard-structure)
+  * [Standard structure for user objects](#standard-structure-for-user-objects)
+  * [Standard structure for token data](#standard-structure-for-token-data)
 - [API](#api)
   * [VeracityAuthFlowStrategy](#veracityauthflowstrategy)
   * [Refresh tokens](#refresh-tokens)
@@ -265,7 +277,6 @@ const settings = {
 	}
 }
 
-
 // With the strategy you need to provide a middleware on the login endpoint
 app.get("/login", (req, res, next) => {
 	req.veracityAuthData = { // Set some options on the veracityAuthData object
@@ -279,6 +290,115 @@ app.post("[path section of replyUrl]", bodyParser.urlencoded({extended: true}), 
 	res.send(`Login duration ${Date.now() - req.veracityAuthData.loginBegan} in ms`)
 })
 ```
+
+## Data structures
+The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor.
+
+<!-- types -->
+### IVeracityAuthFlowStrategySettings
+
+Property|Type|Description
+-|-|-
+tenantId❔ <br>="a68572e3-63ce-4bc1-acdc-b64943502e9d"|string|The id of the Veracity tenant you are authenticating with.
+policy❔ <br>="B2C_1A_SignInWithADFSIdp"|string|The name of the authenication policy.
+logoutRedirectUrl❔ <br>="https://www.veracity.com/auth/logout"|string|Where to redirect the user after logging out. You should not set this unless you know what you're doing
+clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
+clientSecret|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub
+replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub
+requestRefreshTokens❔ <br>=true|boolean|If true retrieves a refresh token for each api scope in addition to the access token.
+apiScopes❔ <br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this setting.
+
+### IVeracityAuthFlowStrategyVerifierOptions
+
+Property|Type|Description
+-|-|-
+idToken|string|The full ID token
+idTokenDecoded|IVeracityIDTokenPayload|The decoded ID token payload (header and signature not included)
+apiTokens❔|{[scope: string]: IVeracityTokenData}|Contains all access tokens and associated refresh tokens negotiated by the system. Tokens are indexed by the scope string. If no api scopes were provided in the strategy settings this will not be defined.
+
+### IVeracityTokenData
+
+Property|Type|Description
+-|-|-
+scope|string|The associated scope of this token.
+idToken|string|The id token returned along with the authorization code used to retrieve this access token.
+idTokenDecoded|IVeracityIDTokenPayload|The decoded id token (header and signature not included).
+accessToken|string|The full access token.
+accessTokenDecoded|IVeracityAccessTokenPayload|The decoded access token payload (header and signature not included).
+accessTokenIssued|number|The timestamp when the access token was issued.
+accessTokenExpires|number|The timestamp when the access token expires.
+accessTokenLifetime|number|The lifetime of the access token in seconds.
+refreshToken❔|string|The opaque refresh token if offline_access scope was provided.
+refreshTokenExpires❔|number|The timestamp when the refresh token expires if refresh token is present.
+
+### ICommonClaims
+
+Property|Type|Description
+-|-|-
+iss|string|
+sub|"Not supported currently. Use oid claim."|
+aud|string|
+exp|number|
+nbf|number|
+iat|number|
+email|string[]|
+nonce|string|
+given_name|string|
+family_name|string|
+name|string|
+ver|"1.0"|
+
+### IVeracityTokenHeader
+
+Property|Type|Description
+-|-|-
+typ|string|
+alg|string|
+kid|string|
+
+### IVeracityIDTokenPayload
+*extends ICommonClaims*
+Property|Type|Description
+-|-|-
+c_hash❔|string|
+at_hash❔|string|
+acr|string|
+auth_time|number|
+userId|string|
+dnvglAccountName|string|
+myDnvglGuid|string|
+oid|string|
+upn|string|
+
+### IVeracityAccessTokenPayload
+*extends ICommonClaims*
+Property|Type|Description
+-|-|-
+azp|string|
+userId|string|
+dnvglAccountName|string|
+myDnvglGuid|string|
+oid|string|
+upn|string|
+scp|string|
+
+### IVeracityIDToken
+
+Property|Type|Description
+-|-|-
+header|IVeracityTokenHeader|
+payload|IVeracityIDTokenPayload|
+signature|string|
+
+### IVeracityAccessToken
+
+Property|Type|Description
+-|-|-
+header|IVeracityTokenHeader|
+payload|IVeracityAccessTokenPayload|
+signature|string|
+
+<!-- /types -->
 
 ## Authentication process
 The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code).

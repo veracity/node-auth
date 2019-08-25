@@ -1,14 +1,12 @@
 import { RequestHandler, Router } from "express-serve-static-core"
 import { VeracityAuthFlowStrategy } from "../auth/VeracityAuthFlowStrategy"
-import {
-	IVeracityAuthFlowStrategySettings,
-	VerifierFunction
-} from "../interfaces"
 import makeSessionConfigObject, { IMakeSessionConfigObjectOptions } from "./makeSessionConfigObject"
 
 import bodyParser from "body-parser"
 import session from "express-session"
 import passport from "passport"
+import { IVeracityAuthFlowStrategySettings } from "../interfaces/IVeracityAuthFlowStrategySettings"
+import { VerifierFunction } from "../interfaces/IVeracityAuthFlowStrategyVerifierOptions";
 
 export interface ISetupAuthFlowOptions<TUser = any> {
 	/**
