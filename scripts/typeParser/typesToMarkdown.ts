@@ -7,9 +7,9 @@ import {
 const interfaceTypeToString = (interfaceType: InterfacePropertyType) => {
 	switch (interfaceType) {
 		case InterfacePropertyType.optional:
-			return "❔"
+			return "?"
 		case InterfacePropertyType.deprecated:
-			return "⬇️"
+			return "⬇"
 	}
 	return ""
 }
@@ -22,18 +22,23 @@ const propsToMarkdownTableRows = (props: IInterfaceProperty[]) => {
 	const table = `Property|Type|Description
 -|-|-
 `
+	const desc = (prop: IInterfaceProperty) =>
+	 (prop.deprecatedMessage ? "**Deprecated:** "+
+	 	escapePipe(prop.deprecatedMessage.trim().replace(/(\n|\r|\n\r)\s*/, " ")+" - ") : "") +
+		escapePipe(prop.description.replace(/(\n|\r|\n\r)\s*/, "<br>"))
+
 	return table + props.map((prop) => {
 		return [
-			`${escapePipe(propNameToString(prop))}`,
+			escapePipe(propNameToString(prop)),
 			escapePipe(prop.type.trim()),
-			escapePipe(prop.description.replace(/(\n|\r|\n\r)\s*/, "<br>"))
+			desc(prop)
 		].join("|")
 	}).join("\n")
 }
 
 export const typeToMarkdown = (prop: IProperty, headingPrefix: string = "###") => {
 	return `${headingPrefix} ${prop.name}
-${prop.generics ? "*"+prop.generics+"* " : ""}${prop.extenders ? `*extends ${prop.extenders.join(", ")}*` : ""}
+${prop.generics ? "*"+prop.generics+"* " : ""}${prop.extenders ? `*extends ${prop.extenders.join(", ")}*\n` : "\n"}
 ${propsToMarkdownTableRows(prop.property as IInterfaceProperty[])}
 `
 }
