@@ -586,7 +586,7 @@ VIDPError objects expose a `details` property that contains:
 - `error` - The error code for this error (see the complete list below)
 - `description` - A textual description of the error
 - `innerError` - Certain errors such as token validation errors will contain an inner error from the validation library. You can inspect this for more details.
-- `idToken` - Contains the raw ID token if one was available. You can decode this to view all user information.
+- `idToken` - ⭐️Contains the raw ID token if one was available. You can decode this to view all user information.
 
 Should an error occur during the authentication process it will be passed to next() just like other errors in Connect-compatible applications like ExpressJS. You should handle these errors according to the documentation from your library of choice. You can find more information on error handling in [Connect here](https://github.com/senchalabs/connect#error-middleware) and [ExpressJS here](https://expressjs.com/en/guide/error-handling.html).
 
