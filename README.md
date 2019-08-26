@@ -448,7 +448,7 @@ The library makes use of several data structures. They are all defined as TypeSc
 
 Property|Type|Description
 -|-|-
-secret|string|A unique string that is used to sign the session id.<br>This MUST NOT be shared with any other application.
+secret⬇|string|**Deprecated:** Borked - A unique string that is used to sign the session id.<br>This MUST NOT be shared with any other application.
 store|Store \| MemoryStore|A store instance where session data will be stored.<br>You MUST provide this otherwise express-session will default to using the insecure memory store.
 
 ### ISetupAuthFlowOptions
