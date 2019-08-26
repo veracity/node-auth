@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken"
-import { IVeracityAccessToken, IVeracityIDToken, IVeracityJWKWithPEM } from "../interfaces"
-import { validateTokenHash } from "./validateTokenHash";
+import { IVeracityAccessToken, IVeracityIDToken } from "../interfaces/veracityTokens"
+import { IVeracityJWKWithPEM } from "../internalInterfaces/veracityIDPReqRes"
+import { validateTokenHash } from "./validateTokenHash"
 
 export interface IValidationOptions {
 	/**

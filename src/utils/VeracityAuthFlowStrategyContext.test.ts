@@ -11,7 +11,7 @@ import {
 	mockJWKResponse,
 	mockMetaResponse
 } from "../../test/mockB2CResponses"
-import { IVIDPLoginRequestParamaters } from "../interfaces"
+import { IVIDPLoginRequestParamaters } from "../internalInterfaces/veracityIDPReqRes"
 import { VeracityAuthFlowStrategyContext } from "./VeracityAuthFlowStrategyContext"
 
 jest.mock("request-promise-native")

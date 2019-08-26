@@ -1,13 +1,15 @@
 import { NextFunction, Request, Response } from "express-serve-static-core"
 import { Strategy, StrategyCreatedStatic } from "passport"
+import { IVeracityAuthFlowStrategySettings } from "../interfaces/IVeracityAuthFlowStrategySettings"
+import { VerifierFunction } from "../interfaces/IVeracityAuthFlowStrategyVerifierOptions"
+import { IVeracityTokenData } from "../interfaces/IVeracityTokenData"
 import {
-	IVeracityAuthFlowStrategySettings,
-	IVeracityAuthFlowStrategySettingsRequired,
-	IVeracityTokenData,
+	IVeracityAuthFlowStrategySettingsRequired
+} from "../internalInterfaces/IVeracityAuthFlowStrategySettingsRequired"
+import {
 	IVIDPRefreshTokenRequestParameters,
-	IVIDPRefreshTokenResponseSuccess,
-	VerifierFunction
-} from "../interfaces"
+	IVIDPRefreshTokenResponseSuccess
+} from "../internalInterfaces/veracityIDPReqRes"
 import { createUid } from "../utils/createUid"
 import getVeracityAuthMetadata from "../utils/getVeracityAuthMetadata"
 import { request } from "../utils/request"
@@ -156,7 +158,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 	 */
 	public logout = (req: Request, res: Response) => {
 		req.logout()
-		res.redirect("https://www.veracity.com/auth/logout")
+		res.redirect(this.settings.logoutRedirectUrl)
 	}
 
 	private async getRefreshedToken(tokenData: IVeracityTokenData) {

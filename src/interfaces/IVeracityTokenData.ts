@@ -43,7 +43,7 @@ export interface IVeracityTokenData {
 	 */
 	refreshToken?: string
 	/**
-	 * The epoch timestamp when the refresh token expires if refresh token is present.
+	 * The timestamp when the refresh token expires if refresh token is present.
 	 */
 	refreshTokenExpires?: number
 }

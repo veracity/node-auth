@@ -37,13 +37,7 @@ export interface IVeracityAuthFlowStrategySettings {
 	/**
 	 * The scopes you wish to authenticate with. An access token will be retrieved for each api scope.
 	 * If you only wish to authenticate with Veracity you can ignore this setting.
-	 * ["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]
+	 * @default ["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]
 	 */
 	apiScopes?: string[]
-}
-
-export interface IVeracityAuthFlowStrategySettingsRequired extends IVeracityAuthFlowStrategySettings {
-	tenantId: string
-	policy: string
-	logoutRedirectUrl: string
 }

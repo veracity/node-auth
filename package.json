@@ -1,12 +1,13 @@
 {
   "name": "@veracity/node-auth",
-  "version": "0.2.0-beta",
+  "version": "0.3.0-beta",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
-    "build:make-toc": "markdown-toc -i README.md",
-    "build:copyfiles": "ts-node -T scripts/build.ts",
+    "build:copy-files": "ts-node -T scripts/copy-files.ts",
+    "build:types": "ts-node -T scripts/add-types-to-readme.ts",
+    "build:toc": "markdown-toc -i README.md",
     "build:tsc": "rimraf dist && tsc --build tsconfig.json",
-    "build": "npm run build:tsc && npm run build:make-toc && npm run build:copyfiles",
+    "build": "npm run build:tsc && npm run build:types && npm run build:toc && npm run build:copy-files",
     "test": "jest",
     "test:watch": "jest --watch"
   },

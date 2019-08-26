@@ -29,7 +29,7 @@ const createRefreshTokenMiddleware = strategy.refreshTokenMiddleware((tokenData,
 	}
 }, () => true) // This refresh strategy will allways refresh the token
 
-// strategy.settings.apiScopes[0] is the Services API scope
+// strategy.settings.apiScopes[0] is the Services API scope by default
 const refreshServicesToken = createRefreshTokenMiddleware(strategy.settings.apiScopes[0])
 
 // This endpoint will return our user data so we can inspect it.

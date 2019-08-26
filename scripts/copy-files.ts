@@ -40,6 +40,7 @@ const start = async () => {
 		console.log("  ", aFile.source, " -> ", aFile.dest)
 		return pCopyFile(aFile.source, aFile.dest)
 	}))
+
 	console.log("Done")
 }
 
