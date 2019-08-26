@@ -443,6 +443,7 @@ The library makes use of several data structures. They are all defined as TypeSc
 <!-- types -->
 ### IMakeSessionConfigObjectOptions
 
+
 Property|Type|Description
 -|-|-
 secret|string|A unique string that is used to sign the session id.<br>This MUST NOT be shared with any other application.
@@ -450,39 +451,43 @@ store|Store \| MemoryStore|A store instance where session data will be stored.<b
 
 ### ISetupAuthFlowOptions
 *<TUser = any>* 
+
 Property|Type|Description
 -|-|-
 appOrRouter|Router|Required to attach passport and session middleware as well as setting up your authentication routes.<br>Usually this is an express application instance, but a router is also supported.
-loginPath❔<br>="/login"|string|Specify the url path where users can log in. E.g.: /auth/login
-logoutPath❔<br>="/logout"|string|Specify the url path where users can log out
+loginPath?<br>="/login"|string|Specify the url path where users can log in. E.g.: /auth/login
+logoutPath?<br>="/logout"|string|Specify the url path where users can log out
 strategySettings|IVeracityAuthFlowStrategySettings,|Define all required settings to set up the Veracity authentication strategy.
 sessionSettings|IMakeSessionConfigObjectOptions|Define required settings for the session middleware.
-onBeforeLogin❔<br>=function Passthrough function|RequestHandler|A handler that is run before the login process begins.<br>Note that this handler MUST call next() in order to continue the login process.
-onVerify❔<br>=function Passthrough that stores everything|VerifierFunction<TUser>|A function that is called once the user has completely logged in.<br>Here you can specify how the user object will look when it's attached to req.user
-onLoginComplete❔<br>=function|RequestHandler|The handler to call when the login has completed.<br>Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
+onBeforeLogin?<br>=function Passthrough function|RequestHandler|A handler that is run before the login process begins.<br>Note that this handler MUST call next() in order to continue the login process.
+onVerify?<br>=function Passthrough that stores everything|VerifierFunction<TUser>|A function that is called once the user has completely logged in.<br>Here you can specify how the user object will look when it's attached to req.user
+onLoginComplete?<br>=function|RequestHandler|The handler to call when the login has completed.<br>Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
 
 ### IVeracityAuthFlowStrategySettings
 
+
 Property|Type|Description
 -|-|-
-tenantId❔<br>="a68572e3-63ce-4bc1-acdc-b64943502e9d"|string|The id of the Veracity tenant you are authenticating with.
-policy❔<br>="B2C_1A_SignInWithADFSIdp"|string|The name of the authenication policy.
-logoutRedirectUrl❔<br>="https://www.veracity.com/auth/logout"|string|Where to redirect the user after logging out. You should not set this unless you know what you're doing
+tenantId?<br>="a68572e3-63ce-4bc1-acdc-b64943502e9d"|string|The id of the Veracity tenant you are authenticating with.
+policy?<br>="B2C_1A_SignInWithADFSIdp"|string|The name of the authenication policy.
+logoutRedirectUrl?<br>="https://www.veracity.com/auth/logout"|string|Where to redirect the user after logging out. You should not set this unless you know what you're doing
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
 clientSecret|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub
-requestRefreshTokens❔<br>=true|boolean|If true retrieves a refresh token for each api scope in addition to the access token.
-apiScopes❔<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this setting.
+requestRefreshTokens?<br>=true|boolean|If true retrieves a refresh token for each api scope in addition to the access token.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this setting.
 
 ### IVeracityAuthFlowStrategyVerifierOptions
+
 
 Property|Type|Description
 -|-|-
 idToken|string|The full ID token
 idTokenDecoded|IVeracityIDTokenPayload|The decoded ID token payload (header and signature not included)
-apiTokens❔|{[scope: string]: IVeracityTokenData}|Contains all access tokens and associated refresh tokens negotiated by the system. Tokens are indexed by the scope string. If no api scopes were provided in the strategy settings this will not be defined.
+apiTokens?|{[scope: string]: IVeracityTokenData}|Contains all access tokens and associated refresh tokens negotiated by the system. Tokens are indexed by the scope string. If no api scopes were provided in the strategy settings this will not be defined.
 
 ### IVeracityTokenData
+
 
 Property|Type|Description
 -|-|-
@@ -494,10 +499,11 @@ accessTokenDecoded|IVeracityAccessTokenPayload|The decoded access token payload 
 accessTokenIssued|number|The timestamp when the access token was issued.
 accessTokenExpires|number|The timestamp when the access token expires.
 accessTokenLifetime|number|The lifetime of the access token in seconds.
-refreshToken❔|string|The opaque refresh token if offline_access scope was provided.
-refreshTokenExpires❔|number|The timestamp when the refresh token expires if refresh token is present.
+refreshToken?|string|The opaque refresh token if offline_access scope was provided.
+refreshTokenExpires?|number|The timestamp when the refresh token expires if refresh token is present.
 
 ### ICommonClaims
+
 
 Property|Type|Description
 -|-|-
@@ -516,6 +522,7 @@ ver|"1.0"|
 
 ### IVeracityTokenHeader
 
+
 Property|Type|Description
 -|-|-
 typ|string|
@@ -524,10 +531,11 @@ kid|string|
 
 ### IVeracityIDTokenPayload
 *extends ICommonClaims*
+
 Property|Type|Description
 -|-|-
-c_hash❔|string|Hash of the Authorization code. Only present if request was for an authorization code.
-at_hash❔|string|Hash of the access token. Only present if request was for an access token.
+c_hash?|string|Hash of the Authorization code. Only present if request was for an authorization code.
+at_hash?|string|Hash of the access token. Only present if request was for an access token.
 acr|string|
 auth_time|number|
 userId|string|
@@ -538,6 +546,7 @@ upn|string|
 
 ### IVeracityAccessTokenPayload
 *extends ICommonClaims*
+
 Property|Type|Description
 -|-|-
 azp|string|
@@ -550,6 +559,7 @@ scp|string|
 
 ### IVeracityIDToken
 
+
 Property|Type|Description
 -|-|-
 header|IVeracityTokenHeader|
@@ -557,6 +567,7 @@ payload|IVeracityIDTokenPayload|
 signature|string|
 
 ### IVeracityAccessToken
+
 
 Property|Type|Description
 -|-|-

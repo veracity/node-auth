@@ -7,9 +7,9 @@ import {
 const interfaceTypeToString = (interfaceType: InterfacePropertyType) => {
 	switch (interfaceType) {
 		case InterfacePropertyType.optional:
-			return "❔"
+			return "?"
 		case InterfacePropertyType.deprecated:
-			return "⬇️"
+			return "⬇"
 	}
 	return ""
 }
@@ -33,7 +33,7 @@ const propsToMarkdownTableRows = (props: IInterfaceProperty[]) => {
 
 export const typeToMarkdown = (prop: IProperty, headingPrefix: string = "###") => {
 	return `${headingPrefix} ${prop.name}
-${prop.generics ? "*"+prop.generics+"* " : ""}${prop.extenders ? `*extends ${prop.extenders.join(", ")}*` : ""}
+${prop.generics ? "*"+prop.generics+"* " : ""}${prop.extenders ? `*extends ${prop.extenders.join(", ")}*\n` : "\n"}
 ${propsToMarkdownTableRows(prop.property as IInterfaceProperty[])}
 `
 }
