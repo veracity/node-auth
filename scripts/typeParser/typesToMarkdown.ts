@@ -13,9 +13,10 @@ const interfaceTypeToString = (interfaceType: InterfacePropertyType) => {
 	}
 	return ""
 }
+const escapePipe = (str: string) => str.replace("|", "\\|")
 const propNameToString = (prop: IInterfaceProperty) =>
 	`${prop.name}${interfaceTypeToString(prop.interfacePropertyType)}`+
-	`${prop.defaultValue ? ` <br>=${prop.defaultValue.trim()}` : ""}`
+	`${prop.defaultValue ? `<br>=${prop.defaultValue.trim()}` : ""}`
 
 const propsToMarkdownTableRows = (props: IInterfaceProperty[]) => {
 	const table = `Property|Type|Description
@@ -23,16 +24,16 @@ const propsToMarkdownTableRows = (props: IInterfaceProperty[]) => {
 `
 	return table + props.map((prop) => {
 		return [
-			`${propNameToString(prop)}`,
-			prop.type.trim(),
-			prop.description
+			`${escapePipe(propNameToString(prop))}`,
+			escapePipe(prop.type.trim()),
+			escapePipe(prop.description.replace(/(\n|\r|\n\r)\s*/, "<br>"))
 		].join("|")
 	}).join("\n")
 }
 
 export const typeToMarkdown = (prop: IProperty, headingPrefix: string = "###") => {
 	return `${headingPrefix} ${prop.name}
-${prop.extenders ? `*extends ${prop.extenders.join(", ")}*` : ""}
+${prop.generics ? "*"+prop.generics+"* " : ""}${prop.extenders ? `*extends ${prop.extenders.join(", ")}*` : ""}
 ${propsToMarkdownTableRows(prop.property as IInterfaceProperty[])}
 `
 }

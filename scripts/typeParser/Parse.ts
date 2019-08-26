@@ -64,14 +64,15 @@ export function parse(source: string, propsInterfaceOrEnumName?: string): IPrope
 			} as IProperty]
 		}
 	} else {
-		regex = new RegExp(`export (interface|enum) (\\S*?)( extends .*?)?\\s*\\{(.*[\\r\\n]*)*?\\}`, "g")
+		regex = new RegExp(`export (interface|enum) (\\S*?)(<.*?>)?( extends .*?)?\\s*\\{(.*[\\r\\n]*)*?\\}`, "g")
 		let regexResult: RegExpExecArray | null
 		const results: IProperty[] = []
 		while ((regexResult = regex.exec(source)) !== null) {
 			parseInfo = _parseEnumOrInterface(regexResult)
 			results.push({
 				name: regexResult[2],
-				extenders: _parseExtends(regexResult[3]),
+				generics: regexResult[3],
+				extenders: _parseExtends(regexResult[4]),
 				propertyName: regexResult[2] + propertyNameSuffix(regexResult[1]),
 				propertyType: propertyType(regexResult[1]),
 				property: parseInfo

@@ -5,6 +5,10 @@
 
 import forge from "node-forge"
 
+/**
+ * Generates a {key, pem} self-signed certificate set for use with development only!
+ * Requires dependency node-forge
+ */
 export const generateCertificate = () => {
 	if (process.env.NODE_ENV === "production") {
 		console.warn("The generateCertificate utility should not be used for production code.")

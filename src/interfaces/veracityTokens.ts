@@ -24,11 +24,11 @@ export interface IVeracityTokenHeader {
 
 export interface IVeracityIDTokenPayload extends ICommonClaims {
 	/**
-	 * Hash of the Authorization code.
+	 * Hash of the Authorization code. Only present if request was for an authorization code.
 	 */
 	c_hash?: string
 	/**
-	 * Hash of the access token.
+	 * Hash of the access token. Only present if request was for an access token.
 	 */
 	at_hash?: string
 	acr: string

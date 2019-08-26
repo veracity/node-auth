@@ -1,5 +1,6 @@
 export interface IProperty {
 	name: string
+	generics?: string
 	propertyName: string
 	propertyType: PropertyType
 	property: Property[]

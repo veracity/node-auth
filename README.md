@@ -16,26 +16,24 @@ It is highly recommended that you use a TypeScript aware IDE when using this lib
   * [Using the helper function](#using-the-helper-function)
   * [Using the passport strategy](#using-the-passport-strategy)
 - [Passing state](#passing-state)
-- [Data structures](#data-structures)
-  * [IVeracityAuthFlowStrategySettings](#iveracityauthflowstrategysettings)
-  * [IVeracityAuthFlowStrategyVerifierOptions](#iveracityauthflowstrategyverifieroptions)
-  * [IVeracityTokenData](#iveracitytokendata)
-  * [IVeracityTokenHeader](#iveracitytokenheader)
-  * [IVeracityIDTokenPayload](#iveracityidtokenpayload)
-  * [IVeracityAccessTokenPayload](#iveracityaccesstokenpayload)
-  * [IVeracityIDToken](#iveracityidtoken)
-  * [IVeracityAccessToken](#iveracityaccesstoken)
 - [Authentication process](#authentication-process)
-- [Recommended standard structure](#recommended-standard-structure)
-  * [Standard structure for user objects](#standard-structure-for-user-objects)
-  * [Standard structure for token data](#standard-structure-for-token-data)
 - [API](#api)
   * [VeracityAuthFlowStrategy](#veracityauthflowstrategy)
   * [Refresh tokens](#refresh-tokens)
   * [Logging out](#logging-out)
   * [Verifier / onVerify](#verifier--onverify)
-  * [IVeracityTokenData properties (apiTokens)](#iveracitytokendata-properties-apitokens)
-  * [setupAuthFlowStrategy options](#setupauthflowstrategy-options)
+- [Data structures](#data-structures)
+  * [IMakeSessionConfigObjectOptions](#imakesessionconfigobjectoptions)
+  * [ISetupAuthFlowOptions](#isetupauthflowoptions)
+  * [IVeracityAuthFlowStrategySettings](#iveracityauthflowstrategysettings)
+  * [IVeracityAuthFlowStrategyVerifierOptions](#iveracityauthflowstrategyverifieroptions)
+  * [IVeracityTokenData](#iveracitytokendata)
+  * [ICommonClaims](#icommonclaims)
+  * [IVeracityTokenHeader](#iveracitytokenheader)
+  * [IVeracityIDTokenPayload](#iveracityidtokenpayload)
+  * [IVeracityAccessTokenPayload](#iveracityaccesstokenpayload)
+  * [IVeracityIDToken](#iveracityidtoken)
+  * [IVeracityAccessToken](#iveracityaccesstoken)
 - [Error handling](#error-handling)
   * [Error types](#error-types)
 
@@ -147,6 +145,7 @@ const settings = {
 		store: new MemoryStore() // We use a memory store here for development purposes, this is not suitable for production code.
 	}
 }
+// new VeracityAuthFlowStrategy(ISetupAuthFlowOptions<TUser>)
 setupAuthFlowStrategy(settings)
 
 app.get("/", (req, res) => {
@@ -210,6 +209,7 @@ const onVerify = (options, done) => {
 }
 
 // Create the strategy instance and register it with passport using the name "veracity"
+// new VeracityAuthFlowStrategy(IVeracityAuthFlowStrategySettings, VerifierFunction<TUser>)
 passport.use("veracity", new VeracityAuthFlowStrategy(strategySettings, onVerify))
 
 // Set up serialize and deserialize. This will simply store the entire user object in session.
@@ -291,165 +291,19 @@ app.post("[path section of replyUrl]", bodyParser.urlencoded({extended: true}), 
 })
 ```
 
-## Data structures
-The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor.
-
-<!-- types -->
-### IVeracityAuthFlowStrategySettings
-
-Property|Type|Description
--|-|-
-tenantId❔ <br>="a68572e3-63ce-4bc1-acdc-b64943502e9d"|string|The id of the Veracity tenant you are authenticating with.
-policy❔ <br>="B2C_1A_SignInWithADFSIdp"|string|The name of the authenication policy.
-logoutRedirectUrl❔ <br>="https://www.veracity.com/auth/logout"|string|Where to redirect the user after logging out. You should not set this unless you know what you're doing
-clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
-clientSecret|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub
-replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub
-requestRefreshTokens❔ <br>=true|boolean|If true retrieves a refresh token for each api scope in addition to the access token.
-apiScopes❔ <br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this setting.
-
-### IVeracityAuthFlowStrategyVerifierOptions
-
-Property|Type|Description
--|-|-
-idToken|string|The full ID token
-idTokenDecoded|IVeracityIDTokenPayload|The decoded ID token payload (header and signature not included)
-apiTokens❔|{[scope: string]: IVeracityTokenData}|Contains all access tokens and associated refresh tokens negotiated by the system. Tokens are indexed by the scope string. If no api scopes were provided in the strategy settings this will not be defined.
-
-### IVeracityTokenData
-
-Property|Type|Description
--|-|-
-scope|string|The associated scope of this token.
-idToken|string|The id token returned along with the authorization code used to retrieve this access token.
-idTokenDecoded|IVeracityIDTokenPayload|The decoded id token (header and signature not included).
-accessToken|string|The full access token.
-accessTokenDecoded|IVeracityAccessTokenPayload|The decoded access token payload (header and signature not included).
-accessTokenIssued|number|The timestamp when the access token was issued.
-accessTokenExpires|number|The timestamp when the access token expires.
-accessTokenLifetime|number|The lifetime of the access token in seconds.
-refreshToken❔|string|The opaque refresh token if offline_access scope was provided.
-refreshTokenExpires❔|number|The timestamp when the refresh token expires if refresh token is present.
-
-### ICommonClaims
-
-Property|Type|Description
--|-|-
-iss|string|
-sub|"Not supported currently. Use oid claim."|
-aud|string|
-exp|number|
-nbf|number|
-iat|number|
-email|string[]|
-nonce|string|
-given_name|string|
-family_name|string|
-name|string|
-ver|"1.0"|
-
-### IVeracityTokenHeader
-
-Property|Type|Description
--|-|-
-typ|string|
-alg|string|
-kid|string|
-
-### IVeracityIDTokenPayload
-*extends ICommonClaims*
-Property|Type|Description
--|-|-
-c_hash❔|string|
-at_hash❔|string|
-acr|string|
-auth_time|number|
-userId|string|
-dnvglAccountName|string|
-myDnvglGuid|string|
-oid|string|
-upn|string|
-
-### IVeracityAccessTokenPayload
-*extends ICommonClaims*
-Property|Type|Description
--|-|-
-azp|string|
-userId|string|
-dnvglAccountName|string|
-myDnvglGuid|string|
-oid|string|
-upn|string|
-scp|string|
-
-### IVeracityIDToken
-
-Property|Type|Description
--|-|-
-header|IVeracityTokenHeader|
-payload|IVeracityIDTokenPayload|
-signature|string|
-
-### IVeracityAccessToken
-
-Property|Type|Description
--|-|-
-header|IVeracityTokenHeader|
-payload|IVeracityAccessTokenPayload|
-signature|string|
-
-<!-- /types -->
-
 ## Authentication process
-The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-protocols-openid-connect-code).
+The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-protocols-oidc).
 
 This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build cool applications.
-
-## Recommended standard structure
-This library does not require you to structure your user object in a specific way. However, several of the provided utilities may become easier to use if you do. If you are using the `setupAuthFlowStrategy` function to configure authentication in your library it will also use this standard structure for the user object. It does not prevent you from adding additional properties to the user object, but it does define some defaults that work well with the other library utilites.
-
-### Standard structure for user objects
-The default structure for user objects on `req.user` when you use `setupAuthFlowStrategy` is basically to copy the verifier options argument directly onto it. This object is defined by the `IVeracityAuthFlowStrategyVerifierOptions` and is an object with the following properties:
-
-- `idToken` - string - The raw ID token provided by the last authorization code exchange or, if you define no api scopes, the initial returned id token.
-- `idTokenDecoded` - IVeracityIDTokenPayload - The decoded payload of the id token provided in `idToken`.
-- `apiTokens` - Object - An object where each key is an api scope and the values are `IVeracityTokenData` objects.
-
-### Standard structure for token data
-The token data object consists of a set of properties containing information about all token information related to one specific api scope. It is defined by the interface `IVeracityTokenData` and contains the following properties:
-
-- `scope` - string - The name of the scope this token data contains information about
-- `idToken` - string - The specific id token returned when exchanging an authorization code for an access token for this scope.
-- `idTokenDecoded` - IVeracityIDTokenPayload - The decoded payload of the associated id token.
-- `accessToken` - string - The raw access token for this api scope. This is what you send to APIs to authenticate the user.
-- `accessTokenDecoded` - IVeracityAccessTokenPayload - The decoded payload of the access token for this scope.
-- `accessTokenIssued` - number - A timestamp for when the access token was issued (in seconds).
-- `accessTokenExpires` - number - The timestamp for when the access token expires (in seconds).
-- `accessTokenLifetime` - number - The total lifetime of the access token in seconds.
-- `refreshToken` - string - The raw refresh token for this scope. This will only be present if you configured the strategy to ask for refresh tokens.
-- `refreshTokenExpires` - number - The timestamp for when the refresh token expires (in seconds).
 
 ## API
 
 ### VeracityAuthFlowStrategy
 ```javascript
-const strategy = new VeracityAuthFlowStrategy(options, verifier)
+// new VeracityAuthFlowStrategy(IVeracityAuthFlowStrategySettings, VerifierFunction<TUser>)
+const strategy = new VeracityAuthFlowStrategy(settings, verifier)
 passport.use("veracity", strategy)
 ```
-
-**⭐️ New in version 0.2.0**
-The VeracityAuthFlowStrategy contains a few utilities for working with tokens and the Veracity IDP. In addition to handling authentication and token retrival it can also refresh tokens and handle logging the user our correctly.
-
-**options**
-
-- `tenantId` - Default: `a68572e3-63ce-4bc1-acdc-b64943502e9d`. The id of the Veracity IDP. You probably do not need to change this.
-- `policy` - Default: `B2C_1A_SignInWithADFSIdp`. Describes the way you want to authenticate. You probably do not need to change this.
-- `logoutRedirectUrl` - Default: "https://www.veracity.com/auth/logout". Where to redirect the user once they sign out. You are required to redirect users to the default url when logging them out as it will complete the sign out process.
-- `clientId` - This is your applications client id. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
-- `clientSecret` - This is your applications client secret. Use the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal to create this.
-- `replyUrl` - The URL users are redirected back to after logging in. You can configure this in the [Veracity for Developers](https://developerdevtest.veracity.com/projects) portal.
-- `requestRefreshToken` - Default `true`. Set this to true if you want to retrieve a refresh token along with each access token you want. Refresh tokens allow you to request new access tokens once they expire.
-- `apiScopes` - Defaults to scope for Veracity Services API. This is where you configure which scopes you want to acquire access tokens for when users log in. You can specify zero or more scopes depending on your need. If you do not need to call any of the Veracity APIs, but simply wish to use Veracity for authentication set this to an empty array.
 
 ### Refresh tokens
 Access tokens will expire after a short while so your code needs to take this into account and potentially refresh the token before using it to call secure endpoints. You can do this manually if you'd like, but to aid with this process the `VeracityAuthFlowStrategy` instance provides a few helper functions for refreshing access tokens.
@@ -583,34 +437,134 @@ const verifier = async (options, done) => {
 }
 ```
 
-The options object given to the verifier function gives you access to all the data necessary to call protected APIs and display some basic user information.
+## Data structures
+The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor. Below is an export of all public types.
 
-- `idToken` - The full ID token as a string.
-- `idTokenDecoded` - The decoded ID token payload with all claims. Here you find the user's information.
-- `apiTokens` - An object indexed by API scope strings containing every access token as well as additional information such as expire time and refresh token (if applicable). This object will not be present if you do not specify any API scopes in the strategy settings.
+<!-- types -->
+### IMakeSessionConfigObjectOptions
 
-For a list of all returned claims in the ID and access tokens, see the file `veracityTokens.ts` in the `interfaces` folder.
+Property|Type|Description
+-|-|-
+secret|string|A unique string that is used to sign the session id.<br>This MUST NOT be shared with any other application.
+store|Store \| MemoryStore|A store instance where session data will be stored.<br>You MUST provide this otherwise express-session will default to using the insecure memory store.
 
-### IVeracityTokenData properties (apiTokens)
-- `scope` - The scope for this token as a string.
-- `idToken` - The raw ID token as a string.
-- `idTokenDecoded` - The decoded payload of the ID token.
-- `accessToken` - The raw access token as a string.
-- `accessTokenDecoded` - The decoded payload of the access token.
-- `accessTokenExpires` - The unix timestamp when the access token expires.
-- `accessTokenLifetime` - The total lifetime of the access token in seconds.
-- `refreshToken` - If the `requestRefreshTokens` setting is true this will contain the refresh token as a string.
-- `refreshTokenExpires` - The unix timestamp when the refresh token expires.
+### ISetupAuthFlowOptions
+*<TUser = any>* 
+Property|Type|Description
+-|-|-
+appOrRouter|Router|Required to attach passport and session middleware as well as setting up your authentication routes.<br>Usually this is an express application instance, but a router is also supported.
+loginPath❔<br>="/login"|string|Specify the url path where users can log in. E.g.: /auth/login
+logoutPath❔<br>="/logout"|string|Specify the url path where users can log out
+strategySettings|IVeracityAuthFlowStrategySettings,|Define all required settings to set up the Veracity authentication strategy.
+sessionSettings|IMakeSessionConfigObjectOptions|Define required settings for the session middleware.
+onBeforeLogin❔<br>=function Passthrough function|RequestHandler|A handler that is run before the login process begins.<br>Note that this handler MUST call next() in order to continue the login process.
+onVerify❔<br>=function Passthrough that stores everything|VerifierFunction<TUser>|A function that is called once the user has completely logged in.<br>Here you can specify how the user object will look when it's attached to req.user
+onLoginComplete❔<br>=function|RequestHandler|The handler to call when the login has completed.<br>Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
 
-### setupAuthFlowStrategy options
-- `appOrRouter` - The express application instance or router you wish to configure.
-- `loginPath` - Default: "/login". The path in your application users should visit to log in.
-- `logoutPath` - Default: "/logout". The path in your application users should visit to log out.
-- `strategySettings` - The settings for VeracityAuthFlowStrategy (see above)
-- `sessionSettings` - Settings for the express-session middleware. See [express-session](https://github.com/expressjs/session) for details
-- `onBeforeLogin` - An express route handler that is run before the login process begins. It MUST call next() or the login process will not proceeed.
-- `onVerify` - Default: Handler that passes all data from the authentcation over to `req.user`. The verify callback for the strategy. It is called once all tokens have been retrieved and allows you to configure what should be stored on `req.user`. This method supports promises so you may also make lookups in other systems to augment the user object as needed.
-- `onLoginComplete` - Default: Handler that will redirect to "/" or to the url in query parameter `returnTo` from the login request if present. An express route handler that is run after the login completes. Here you may redirect the user, display a page or inspect the query parameters from the original login request. They will have been restored on `req.query` automatically.
+### IVeracityAuthFlowStrategySettings
+
+Property|Type|Description
+-|-|-
+tenantId❔<br>="a68572e3-63ce-4bc1-acdc-b64943502e9d"|string|The id of the Veracity tenant you are authenticating with.
+policy❔<br>="B2C_1A_SignInWithADFSIdp"|string|The name of the authenication policy.
+logoutRedirectUrl❔<br>="https://www.veracity.com/auth/logout"|string|Where to redirect the user after logging out. You should not set this unless you know what you're doing
+clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub
+clientSecret|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub
+replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub
+requestRefreshTokens❔<br>=true|boolean|If true retrieves a refresh token for each api scope in addition to the access token.
+apiScopes❔<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this setting.
+
+### IVeracityAuthFlowStrategyVerifierOptions
+
+Property|Type|Description
+-|-|-
+idToken|string|The full ID token
+idTokenDecoded|IVeracityIDTokenPayload|The decoded ID token payload (header and signature not included)
+apiTokens❔|{[scope: string]: IVeracityTokenData}|Contains all access tokens and associated refresh tokens negotiated by the system. Tokens are indexed by the scope string. If no api scopes were provided in the strategy settings this will not be defined.
+
+### IVeracityTokenData
+
+Property|Type|Description
+-|-|-
+scope|string|The associated scope of this token.
+idToken|string|The id token returned along with the authorization code used to retrieve this access token.
+idTokenDecoded|IVeracityIDTokenPayload|The decoded id token (header and signature not included).
+accessToken|string|The full access token.
+accessTokenDecoded|IVeracityAccessTokenPayload|The decoded access token payload (header and signature not included).
+accessTokenIssued|number|The timestamp when the access token was issued.
+accessTokenExpires|number|The timestamp when the access token expires.
+accessTokenLifetime|number|The lifetime of the access token in seconds.
+refreshToken❔|string|The opaque refresh token if offline_access scope was provided.
+refreshTokenExpires❔|number|The timestamp when the refresh token expires if refresh token is present.
+
+### ICommonClaims
+
+Property|Type|Description
+-|-|-
+iss|string|
+sub|"Not supported currently. Use oid claim."|
+aud|string|
+exp|number|
+nbf|number|
+iat|number|
+email|string[]|
+nonce|string|
+given_name|string|
+family_name|string|
+name|string|
+ver|"1.0"|
+
+### IVeracityTokenHeader
+
+Property|Type|Description
+-|-|-
+typ|string|
+alg|string|
+kid|string|
+
+### IVeracityIDTokenPayload
+*extends ICommonClaims*
+Property|Type|Description
+-|-|-
+c_hash❔|string|Hash of the Authorization code. Only present if request was for an authorization code.
+at_hash❔|string|Hash of the access token. Only present if request was for an access token.
+acr|string|
+auth_time|number|
+userId|string|
+dnvglAccountName|string|
+myDnvglGuid|string|
+oid|string|
+upn|string|
+
+### IVeracityAccessTokenPayload
+*extends ICommonClaims*
+Property|Type|Description
+-|-|-
+azp|string|
+userId|string|
+dnvglAccountName|string|
+myDnvglGuid|string|
+oid|string|
+upn|string|
+scp|string|
+
+### IVeracityIDToken
+
+Property|Type|Description
+-|-|-
+header|IVeracityTokenHeader|
+payload|IVeracityIDTokenPayload|
+signature|string|
+
+### IVeracityAccessToken
+
+Property|Type|Description
+-|-|-
+header|IVeracityTokenHeader|
+payload|IVeracityAccessTokenPayload|
+signature|string|
+
+<!-- /types -->
 
 ## Error handling
 Any error that occurs within a strategy provided by this library will be an instance of a `VIPDError`. VIDPError objects are extensions of regular Error objects that contain additional information about what type of error occured. Using this information you can decide how to proceed.
