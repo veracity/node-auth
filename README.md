@@ -438,6 +438,8 @@ const verifier = async (options, done) => {
 ```
 
 ## Data structures
+⭐️
+
 The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor. Below is an export of all public types.
 
 <!-- types -->
