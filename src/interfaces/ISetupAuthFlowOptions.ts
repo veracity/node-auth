@@ -1,5 +1,5 @@
 import { RequestHandler, Router } from "express-serve-static-core"
-import { IMakeSessionConfigObjectOptions } from "../helpers"
+import { IMakeSessionConfigObjectOptions } from "./IMakeSessionConfigObject"
 import { IVeracityAuthFlowStrategySettings } from "./IVeracityAuthFlowStrategySettings"
 import { VerifierFunction } from "./IVeracityAuthFlowStrategyVerifierOptions"
 
