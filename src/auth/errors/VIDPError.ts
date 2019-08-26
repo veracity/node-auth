@@ -12,7 +12,8 @@ export class VIDPError extends Error {
 	public constructor(
 		detailsOrErrorCode: VIDPErrorCodes | IVIDPLoginResponseFailure | IVIDPAuthorizationCodeExchangeResponseFailure,
 		description?: string,
-		public innerError?: Error) {
+		public innerError?: Error,
+		public idToken?: string) {
 		super(typeof detailsOrErrorCode === "string" ? description : detailsOrErrorCode.error_description)
 
 		if (typeof detailsOrErrorCode === "string") {
