@@ -127,7 +127,8 @@ export class VeracityAuthFlowStrategyContext {
 	private get accessTokenParams(): IVIDPAccessTokenRequestParameters {
 		if (!this.isLoginResponse) {
 			throw new VIDPError("unknown_response",
-				"This request does not appear to be a login response from B2C. Cannot construct accessTokenParams")
+				"This request does not appear to be a login response from B2C. Cannot construct accessTokenParams",
+				undefined, this._idToken)
 		}
 
 		const scopes = ["openid"]
@@ -203,7 +204,7 @@ export class VeracityAuthFlowStrategyContext {
 		try {
 			this.restoreStateOnRequset()
 			if (this.isFailureResponse) {
-				throw new VIDPError(this.reqBodyFailureResponse)
+				throw new VIDPError(this.reqBodyFailureResponse, "", undefined, this._idToken)
 			}
 
 			if (this.isLoginResponse) {
@@ -284,14 +285,15 @@ export class VeracityAuthFlowStrategyContext {
 		const { code, id_token, state } = this.reqBodyLoginResponse
 		if (state !== this.state) {
 			throw new VIDPError("response_validation_error",
-				"State returned from B2C differs from state that was sent. Request may have been tampered with.")
+				"State returned from B2C differs from state that was sent. Request may have been tampered with.",
+				undefined, id_token)
 		}
 
 		const validationOptions = await this.getValidationOptions(id_token)
 		try {
 			return validateIDTokenAndAuthorizationCode(code, validationOptions)
 		} catch (error) {
-			throw new VIDPError("authcode_validation_error", error.message, error)
+			throw new VIDPError("authcode_validation_error", error.message, error, id_token)
 		}
 	}
 	private async exchangeAuthCodeForAccessToken() {
@@ -308,7 +310,7 @@ export class VeracityAuthFlowStrategyContext {
 		try {
 			return validateIDTokenAndAccessToken(accessToken, validationOptions)
 		} catch (error) {
-			throw new VIDPError("accesstoken_validation_error", error.message, error)
+			throw new VIDPError("accesstoken_validation_error", error.message, error, idToken)
 		}
 	}
 

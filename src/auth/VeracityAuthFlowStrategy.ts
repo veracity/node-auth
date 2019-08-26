@@ -69,10 +69,12 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			return
 		}
 
+		let idToken: string | undefined
 		try {
 			const context = new VeracityAuthFlowStrategyContext(req, this.settings)
 			const nextResult = await context.next()
 			if (!nextResult) {
+				idToken = context.idToken
 				return this.verifier({
 						idToken: context.idToken!,
 						idTokenDecoded: context.idTokenDecoded!,
@@ -82,7 +84,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			this.self.redirect(nextResult)
 		} catch (error) {
 			if (!(error instanceof VIDPError)) {
-				const vidpError = new VIDPError("unknown_error", error.message, error)
+				const vidpError = new VIDPError("unknown_error", error.message, error, idToken)
 				this.self.error(vidpError)
 				return
 			}
@@ -104,9 +106,12 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 		) => (tokenApiScopeOrResolver:
 			string | ((req: Request) => IVeracityTokenData | Promise<IVeracityTokenData>)
 		)=> async (req: Request, res: Response, next: NextFunction) => {
+
+		let idToken: string | undefined
 		try {
 			refreshStrategy = refreshStrategy || tokenRefreshStrategies.halfLifetime
 			const oldTokenData = await this.resolveTokenData(tokenApiScopeOrResolver, req)
+			idToken = oldTokenData.idToken
 			if (!refreshStrategy(
 				oldTokenData.accessTokenIssued,
 				oldTokenData.accessTokenExpires,
@@ -120,7 +125,7 @@ export class VeracityAuthFlowStrategy<TUser = any> implements Strategy {
 			next()
 		} catch (error) {
 			if (!(error instanceof VIDPError)) {
-				const vidpError = new VIDPError("unknown_error", error.message, error)
+				const vidpError = new VIDPError("unknown_error", error.message, error, idToken)
 				next(vidpError)
 				return
 			}
