@@ -456,14 +456,14 @@ store|Store \| MemoryStore|A store instance where session data will be stored. Y
 
 Property|Type|Description
 -|-|-
-appOrRouter|Router|Required to attach passport and session middleware as well as setting up your authentication routes.<br>Usually this is an express application instance, but a router is also supported.
+appOrRouter|Router|Required to attach passport and session middleware as well as setting up your authentication routes. Usually this is an express application instance, but a router is also supported.
 loginPath?<br>="/login"|string|Specify the url path where users can log in. E.g.: /auth/login
 logoutPath?<br>="/logout"|string|Specify the url path where users can log out
 strategySettings|IVeracityAuthFlowStrategySettings,|Define all required settings to set up the Veracity authentication strategy.
 sessionSettings|IMakeSessionConfigObjectOptions|Define required settings for the session middleware.
-onBeforeLogin?<br>=function Passthrough function|RequestHandler|A handler that is run before the login process begins.<br>Note that this handler MUST call next() in order to continue the login process.
-onVerify?<br>=function Passthrough that stores everything|VerifierFunction<TUser>|A function that is called once the user has completely logged in.<br>Here you can specify how the user object will look when it's attached to req.user
-onLoginComplete?<br>=function|RequestHandler|The handler to call when the login has completed.<br>Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
+onBeforeLogin?<br>=function Passthrough function|RequestHandler|A handler that is run before the login process begins. Note that this handler MUST call next() in order to continue the login process.
+onVerify?<br>=function Passthrough that stores everything|VerifierFunction<TUser>|A function that is called once the user has completely logged in. Here you can specify how the user object will look when it's attached to req.user
+onLoginComplete?<br>=function|RequestHandler|The handler to call when the login has completed. Defaults to handler that redirects you to whatever was sent in the returnTo query parameter on login or to "/".
 
 ### IVeracityAuthFlowStrategySettings
 
