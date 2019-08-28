@@ -1,3 +1,2 @@
-import * as auth from "./auth"
-
-export const VeracityAuthFlowStrategy = auth.VeracityAuthFlowStrategy
+import { VeracityAuthFlowStrategy } from "./auth"
+export { VeracityAuthFlowStrategy }
