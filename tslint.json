@@ -20,7 +20,7 @@
 		"object-literal-sort-keys": [false],
 		"whitespace": [true, "check-module"],
 		"no-implicit-dependencies": [false],
-		"no-var-requires": [false],
+		"no-var-requires": [true],
 		"ordered-imports": [true],
 		"no-empty-interface": [false],
 		"no-console": [false]

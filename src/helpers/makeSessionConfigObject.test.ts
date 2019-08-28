@@ -21,7 +21,7 @@ describe("makeSessionConfigObject", () => {
 	it("should return a proper session config object", () => {
 		const actual = makeSessionConfigObject(safeDummyOptions)
 		expect(actual).toEqual({
-			name: "veracity.session",
+			name: "veracity.app.session",
 			secret: "dummy.session.secret",
 			resave: false,
 			saveUninitialized: false,
@@ -40,7 +40,7 @@ describe("makeSessionConfigObject", () => {
 			}
 		})
 		expect(actual).toEqual({
-			name: "veracity.session",
+			name: "veracity.app.session",
 			secret: "dummy.session.secret",
 			resave: false,
 			saveUninitialized: false,

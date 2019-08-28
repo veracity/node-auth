@@ -1,10 +1,23 @@
-import { SessionOptions } from "express-session"
-import { IMakeSessionConfigObjectOptions } from "../interfaces/IMakeSessionConfigObject"
+import { MemoryStore, SessionOptions, Store } from "express-session"
 
-const recommendedSessionOptions = {
-	name: "veracity.session",
+export interface IMakeSessionConfigObjectOptions extends SessionOptions {
+	/**
+	 * A unique string that is used to sign the session id.
+	 * This MUST NOT be shared with any other application.
+	 */
+	secret: string
+	/**
+	 * A store instance where session data will be stored.
+	 * You MUST provide this otherwise express-session will default to using the insecure memory store.
+	 */
+	store: Store | MemoryStore
+}
+
+const RECOMMENDED_SESSION_OPTIONS: Omit<SessionOptions, "secret"> = {
+	name: "veracity.app.session",
 	resave: false,
 	saveUninitialized: false,
+	unset: "destroy",
 	cookie: {
 		httpOnly: true,
 		secure: true
@@ -22,9 +35,9 @@ const recommendedSessionOptions = {
  * @param options
  * @returns A configuration object for express-session.
  */
-export const makeSessionConfigObject = (options: IMakeSessionConfigObjectOptions & SessionOptions) => {
+export const makeSessionConfigObject = (options: IMakeSessionConfigObjectOptions) => {
 	const fullOptions = {
-		...recommendedSessionOptions,
+		...RECOMMENDED_SESSION_OPTIONS,
 		...options
 	}
 
@@ -39,12 +52,12 @@ export const makeSessionConfigObject = (options: IMakeSessionConfigObjectOptions
 	}
 	if (!fullOptions.store) {
 		throw new Error("You must specify the store option. Otherwise express-session will default "+
-			"to using the insecure memory store.")
+			"to using the insecure memory store. You can use new MemoryStore() for development.")
 	}
 
 	if (options.cookie) {
 		fullOptions.cookie = {
-			...recommendedSessionOptions.cookie,
+			...RECOMMENDED_SESSION_OPTIONS.cookie,
 			...options.cookie
 		}
 		if (!fullOptions.cookie.httpOnly) {

@@ -1,13 +1,13 @@
 // Import the dependencies we need
-const express = require("express")
-const https = require("https")
-const { MemoryStore } = require("express-session")
-const {
-	setupWebAppAuth,
-	generateCertificate,
+import {
 	createEncryptedSessionStore,
+	generateCertificate,
+	setupWebAppAuth,
 	VERACITY_API_SCOPES
-} = require("@veracity/node-auth")
+} from "@veracity/node-auth"
+import express from "express"
+import { MemoryStore } from "express-session"
+import https from "https"
 
 // Create our express instance
 const app = express()
@@ -48,7 +48,6 @@ app.get("/refresh", refreshTokenMiddleware(VERACITY_API_SCOPES.services), (req, 
 		user: req.user
 	})
 })
-
 
 // Serve static content from the public folder so we can display the index.html page
 app.use(express.static("public"))

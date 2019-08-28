@@ -101,7 +101,8 @@ export class EnumParserHelper extends BaseParser {
 						this._state = ParseState.default
 						returnResult.push({
 							description: comment,
-							name: identifierName
+							name: identifierName,
+							type: identifierName
 						} as IEnumProperty)
 
 						comment = identifierName = ""
