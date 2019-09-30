@@ -1,18 +1,11 @@
-/**
- * Defines some basic token refresh strategies.
- */
-export const tokenRefreshStrategies = {
-	/**
-	 * Enables refresh if the token has less than half its lifetime remaining.
-	 * This is the default strategy.
-	 */
-	halfLifetime: (issued: number, expiresAt: number, ttl: number) => {
-		return (expiresAt - (Date.now()/1000)) < (ttl / 2)
-	},
-	/**
-	 * Enables refresh if the token has less than five minutes lifetime remaining.
-	 */
-	lessThan5Minutes: (issued: number, expiresAt: number, ttl: number) => {
-		return (expiresAt - (Date.now()/1000)) < 60*5
-	}
+import { IVIDPAccessTokenData } from "../interfaces"
+
+const nowInSeconds = () => Date.now() / 1000
+
+export const lessThanXMinutes = (minutes: number) => (token: IVIDPAccessTokenData) => {
+	return token.expires - nowInSeconds() <= minutes * 60
+}
+export const lessThan5Mintes = lessThanXMinutes(5)
+export const lessThanHalfLifetime = (token: IVIDPAccessTokenData) => {
+	return token.expires - nowInSeconds() < (token.lifetime / 2)
 }
