@@ -1,7 +1,8 @@
-import { NextFunction, Request, Response, Router } from "express"
+import { NextFunction, Request, Response } from "express"
 import { VIDPWebAppStrategyVerifier } from "../api"
 import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers"
+import { IRouterLike } from "./IRouterLike"
 import { IVIDPWebAppStrategySettings } from "./IVIDPWebAppStrategySettings"
 
 export interface ISetupWebAppAuthSettings {
@@ -12,7 +13,7 @@ export interface ISetupWebAppAuthSettings {
 	/**
 	 * The express application to configure or the router instance.
 	 */
-	app: Router
+	app: IRouterLike
 	/**
 	 * Session configuration
 	 */
