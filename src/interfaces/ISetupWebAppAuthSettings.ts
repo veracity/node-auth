@@ -48,6 +48,11 @@ export interface ISetupWebAppAuthSettings {
 	 */
 	onLoginComplete?: (req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,
 	/**
+	 * A route handler to execute once the user tries to log out.
+	 * The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
+	 */
+	onLogout?: (req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,
+	/**
 	 * An error handler that is called if an error response is received from the Veracity IDP authentication redirect.
 	 * If not defined will pass the error on to the default error handler in the app or router.
 	 */
