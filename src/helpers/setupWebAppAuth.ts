@@ -60,7 +60,7 @@ export const setupWebAppAuth = <TUser = any>(
 			Object.assign(anyReq.user.accessTokens, {
 				[tokenData.scope]: tokenData
 			})
-		}, VERACITY_METADATA_ENDPOINT)
+		}, strategy.metadataURL || VERACITY_METADATA_ENDPOINT)
 
 	return {
 		refreshTokenMiddleware,
