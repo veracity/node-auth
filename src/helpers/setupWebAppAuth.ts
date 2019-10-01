@@ -25,6 +25,10 @@ export const setupWebAppAuth = <TUser = any>(
 		onLoginComplete = (req: Request, res: Response) => {
 			res.redirect(req.query.returnTo || "/")
 		},
+		onLogout = (req: any, res: any, next: any) => {
+			req.logout()
+			res.redirect(VERACITY_LOGOUT_URL)
+		},
 		onLoginError = (err: any, req: any, res: any, next: any) => {
 			next(err)
 		}
@@ -49,10 +53,7 @@ export const setupWebAppAuth = <TUser = any>(
 		bodyParser.urlencoded({extended: true}),
 		passport.authenticate(name),
 		onLoginComplete, onLoginError)
-	app.get(logoutPath, (req, res) => {
-		req.logout()
-		res.redirect(VERACITY_LOGOUT_URL)
-	})
+	app.get(logoutPath, onLogout)
 
 	const refreshTokenMiddleware = createRefreshTokenMiddleware(strategy,
 		(tokenData, req) => {

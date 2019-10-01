@@ -1,7 +1,8 @@
-import { NextFunction, Request, Response, Router } from "express"
+import { NextFunction, Request, Response } from "express"
 import { VIDPWebAppStrategyVerifier } from "../api"
 import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers"
+import { IRouterLike } from "./IRouterLike"
 import { IVIDPWebAppStrategySettings } from "./IVIDPWebAppStrategySettings"
 
 export interface ISetupWebAppAuthSettings {
@@ -12,7 +13,7 @@ export interface ISetupWebAppAuthSettings {
 	/**
 	 * The express application to configure or the router instance.
 	 */
-	app: Router
+	app: IRouterLike
 	/**
 	 * Session configuration
 	 */
@@ -46,6 +47,11 @@ export interface ISetupWebAppAuthSettings {
 	 * The default will route the user to the returnTo query parameter path or to the root path.
 	 */
 	onLoginComplete?: (req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,
+	/**
+	 * A route handler to execute once the user tries to log out.
+	 * The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
+	 */
+	onLogout?: (req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,
 	/**
 	 * An error handler that is called if an error response is received from the Veracity IDP authentication redirect.
 	 * If not defined will pass the error on to the default error handler in the app or router.
