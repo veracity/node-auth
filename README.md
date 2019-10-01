@@ -14,6 +14,33 @@ Version `1.0.0` is the first officially released and supported implementation of
 
 <!-- toc -->
 
+- [Quick Start](#quick-start)
+  * [onVerify / Verifier](#onverify--verifier)
+- [Passing state](#passing-state)
+- [Error handling](#error-handling)
+- [Authentication process](#authentication-process)
+- [Logging out](#logging-out)
+- [Data structures](#data-structures)
+  * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
+  * [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
+  * [IVIDPAccessTokenData](#ividpaccesstokendata)
+  * [IVIDPAccessToken](#ividpaccesstoken)
+  * [IVIDPConfiguration](#ividpconfiguration)
+  * [IVIDPWebAppConfiguration](#ividpwebappconfiguration)
+  * [IVIDPIDTokenPayload](#ividpidtokenpayload)
+  * [IVIDPIDTokenData](#ividpidtokendata)
+  * [IVIDPTokenData](#ividptokendata)
+  * [IVIDPWebAppStrategySettings](#ividpwebappstrategysettings)
+  * [IVIDPJWTTokenHeader](#ividpjwttokenheader)
+  * [IVIDPJWTTokenData](#ividpjwttokendata)
+  * [IVIDPJWTTokenPayloadCommonClaims](#ividpjwttokenpayloadcommonclaims)
+  * [IVIDPJWTToken](#ividpjwttoken)
+  * [VIDPRequestErrorCodes](#vidprequesterrorcodes)
+  * [VIDPAccessTokenErrorCodes](#vidpaccesstokenerrorcodes)
+  * [VIDPTokenValidationErrorCodes](#vidptokenvalidationerrorcodes)
+  * [VIDPStrategyErrorCodes](#vidpstrategyerrorcodes)
+  * [VIDPRefreshTokenErrorCodes](#vidprefreshtokenerrorcodes)
+
 <!-- tocstop -->
 
 ## Quick Start
@@ -181,10 +208,10 @@ session|IMakeSessionConfigObjectOptions|Session configuration
 strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
 loginPath?|string|The path where login will be configured
 logoutPath?|string|The path where logout will be configured
-onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
-onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
-onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
-onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect.<br>If not defined will pass the error on to the default error handler in the app or router.
+onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts. It executes as a middleware so remember to call next() when you are done.
+onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy. If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
+onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed. The default will route the user to the returnTo query parameter path or to the root path.
+onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect. If not defined will pass the error on to the default error handler in the app or router.
 
 ### IVIDPAccessTokenPayload
 *extends IVIDPJWTTokenPayloadCommonClaims*
@@ -194,8 +221,8 @@ Property|Type|Description
 azp|string|
 userId|string|The users unique ID within Veracity.
 dnvglAccountName|string|The account name for the user.
-myDnvglGuid⬇|string|**Deprecated:**  - The old id for the user.
-oid|string|An object id within the Veracity IDP. Do not use this for user identification<br>@see userId
+myDnvglGuid⬇|string|The old id for the user.
+oid|string|An object id within the Veracity IDP. Do not use this for user identification @see userId
 upn|string|
 scp|string|
 
@@ -240,8 +267,8 @@ acr|string|
 auth_time|number|
 userId|string|The unique Veracity ID of the user.
 dnvglAccountName|string|
-myDnvglGuid⬇|string|**Deprecated:**  - Legacy Veracity ID of the user. Use userId claim instead.
-oid|string|The object id within the Veracity IDP.<br>Do not use this for user identification as it is not propagated to other Veracity services.
+myDnvglGuid⬇|string|Legacy Veracity ID of the user. Use userId claim instead.
+oid|string|The object id within the Veracity IDP. Do not use this for user identification as it is not propagated to other Veracity services.
 upn|string|
 
 ### IVIDPIDTokenData
@@ -253,6 +280,7 @@ export interface IVIDPIDToken extends IVIDPJWTToken<IVIDPIDTokenPayload> { }|uns
 
 ### IVIDPTokenData
 
+
 Property|Type|Description
 -|-|-
 idToken|IVIDPIDTokenData|The parsed identity token.
@@ -260,14 +288,14 @@ accessTokens|{[apiScope: string]: IVIDPAccessTokenData}|Any access tokens reciev
 
 ### IVIDPWebAppStrategySettings
 
+
 Property|Type|Description
 -|-|-
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
-clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
+clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub. Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to
- slightly improve performance.
-metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
+metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found. Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
 
@@ -345,7 +373,7 @@ Property|Type|Description
 
 Property|Type|Description
 -|-|-
-"malfomed_token"|"malfomed_token"|The token is malformed.<br>It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
+"malfomed_token"|"malfomed_token"|The token is malformed. It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
 "missing_header"|"missing_header"|The token is malformed. Its header is missing.
 "missing_payload"|"missing_payload"|The token is malformed. Its payload is missing.
 "missing_signature"|"missing_signature"|The token is malformed. Its signature
@@ -359,15 +387,15 @@ Property|Type|Description
 Property|Type|Description
 -|-|-
 "missing_required_setting"|"missing_required_setting"|A required setting was missing. See description for more information.
-"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly<br>or if an attacker is attempting a replay attack.
+"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly or if an attacker is attempting a replay attack.
 "verifier_error"|"verifier_error"|An error occured in the verifier function called once the authentication is completed.
-"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error.<br>Check the error details or innerError for more information.
+"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error. Check the error details or innerError for more information.
 
 ### VIDPRefreshTokenErrorCodes
 
 
 Property|Type|Description
 -|-|-
-"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver.<br>See description for more details.
+"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver. See description for more details.
 
 <!-- /types -->
