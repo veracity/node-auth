@@ -16,6 +16,7 @@ Version `1.0.0` is the first officially released and supported implementation of
 
 - [Quick Start](#quick-start)
   * [onVerify / Verifier](#onverify--verifier)
+- [Encrypting session](#encrypting-session)
 - [Passing state](#passing-state)
 - [Error handling](#error-handling)
 - [Authentication process](#authentication-process)
@@ -95,6 +96,39 @@ const verifier = async (tokenData, req, done) => {
 // Create the strategy instance and register it with passport using the name "veracity"
 // new VeracityAuthFlowStrategy(IVeracityAuthFlowStrategySettings, VerifierFunction<TUser>)
 passport.use("veracity", new VIDPOpenIDCStrategy(strategySettings, verifier))
+```
+
+## Encrypting session
+When configuring authentication you need to provide a place to store session data. This is done through the `store` configuration for `express-session`. In the samples we use a MemoryStore instance that keeps the data in memory, but this is not suitable to for production as it does not scale. For such systems you would probably go with a database or cache of some kind such as MySQL or Redis.
+
+Once you set up such a session storage mechanism, however there are some considerations you need to take into account. Since the access tokens for individual users are stored as session data it means that anyone with access to the session storage database can extract any token for a currently logged in user and use it themselves. Since the token is the only key needed to perform actions on behalf of the user it is considered sensitive information and must therefore be protected accordingly.
+
+This library comes with a helper function to deal with just this scenario called `createEncryptedSessionStore`. This function uses the **AES-256-CBC** algorithm to encrypt and decrypt a subset of session data on-the-fly preventing someone with access to the store from seeing the plain access tokens. They will only see an encrypted blob of text.
+
+The way `createEncryptedSessionStore` works is that it replaces the read and write functions of an `express-session` compatible store with augmented versions that decrypt and encrypt a set of specified properties (if present on the session object) respectively. This means that you can still use any of the compatible store connectors and simply pass it through the helper function to get a version that provides encryption.
+
+Using the Redis connector you can configure an encrypted session like this:
+```javascript
+const session = require("express-session")
+const { createEncryptedSessionStore } = require("@veracity/node-auth")
+const redisStore = require("connect-redis")(session)
+
+// You should NOT hard-code the encryption key. It should be served from a secure store such as Azure KeyVault or similar
+const encryptedRedisStore = createEncryptedSessionStore("encryption key")(redisStore)
+
+// We can now use the encryptedRedisStore in place of a regular store to configure authentication
+setupWebAppAuth({
+	app,
+	strategy: {
+		clientId: "",
+		clientSecret: "",
+		replyUrl: ""
+	},
+	session: {
+		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9",
+		store: encryptedRedisStore // Use encrypted version of redis store
+	}
+})
 ```
 
 ## Passing state

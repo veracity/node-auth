@@ -1,7 +1,7 @@
-# JS Helper example
-This example implements Veracity authentication using the `setupWebAppAuth` helper function. For details see the `start.js` file.
+# TypeScript Helper example
+This example implements Veracity authentication using the `setupWebAppAuth` helper function and TypeScript. For details see the `start.ts` file.
 
-You need to fill in application credentials on line 23-25 in `start.js` before this sample will run. Visit the [Veracity for Developers project portal](https://developer.veracity.com/projects) to create them.
+You need to fill in application credentials on line 23-25 in `start.ts` before this sample will run. Visit the [Veracity for Developers project portal](https://developer.veracity.com/projects) to create them.
 
 To run the sample:
 ```javascript
