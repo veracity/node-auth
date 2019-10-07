@@ -54,7 +54,11 @@ export enum VIDPAccessTokenErrorCodes {
 	/**
 	 * The server is temporarily too busy to handle the request.
 	 */
-	"temporarily_unavailable" = "temporarily_unavailable"
+	"temporarily_unavailable" = "temporarily_unavailable",
+	/**
+	 * The IPD did not return an access token. Check that you specified a valid scope.
+	 */
+	"missing_access_token" = "missing_access_token"
 }
 
 /**
