@@ -410,6 +410,7 @@ Property|Type|Description
 "invalid_resource"|"invalid_resource"|The target resource is invalid because it does not exist, Azure AD can't find it, or it's not correctly configured.
 "interaction_required"|"interaction_required"|The request requires user interaction. For example, an additional authentication step is required.
 "temporarily_unavailable"|"temporarily_unavailable"|The server is temporarily too busy to handle the request.
+"missing_access_token"|"missing_access_token"|The IPD did not return an access token. Check that you specified a valid scope.
 
 ### VIDPTokenValidationErrorCodes
 
