@@ -69,7 +69,7 @@ export class VIDPWebAppStrategy<TUser = any> implements Strategy {
 
 	public async authenticate(req: Request, options?: any) {
 		try {
-			const metadata = await getVIDPMetadata()
+			const metadata = await getVIDPMetadata(this.settings.metadataURL)
 			const context = new VIDPOpenIDContext(req, {
 				apiScopes: this.settings.apiScopes,
 				authParams: this.authParams,

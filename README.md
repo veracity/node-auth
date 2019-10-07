@@ -250,11 +250,11 @@ session|IMakeSessionConfigObjectOptions|Session configuration
 strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
 loginPath?|string|The path where login will be configured
 logoutPath?|string|The path where logout will be configured
-onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts. It executes as a middleware so remember to call next() when you are done.
-onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy. If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
-onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed. The default will route the user to the returnTo query parameter path or to the root path.
-onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out. The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
-onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect. If not defined will pass the error on to the default error handler in the app or router.
+onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
+onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
+onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
+onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out.<br>The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
+onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect.<br>If not defined will pass the error on to the default error handler in the app or router.
 
 ### IVIDPAccessTokenPayload
 *extends IVIDPJWTTokenPayloadCommonClaims*
