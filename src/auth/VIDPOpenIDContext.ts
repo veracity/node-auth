@@ -1,4 +1,4 @@
-import { VIDPError, VIDPErrorSources, VIDPStrategyErrorCodes } from "../errors"
+import { VIDPAccessTokenErrorCodes, VIDPError, VIDPErrorSources, VIDPStrategyErrorCodes } from "../errors"
 import { IVIDPAccessToken, IVIDPAccessTokenData, IVIDPIDToken, IVIDPIDTokenData, IVIDPTokenData } from "../interfaces"
 import {
 	IVIDPAuthResponseFailure,
@@ -232,6 +232,13 @@ export class VIDPOpenIDContext {
 
 		const { issuer, jwks } = this.metadata
 		const accessTokenResponse = await requestVIDPAccessToken(accessTokenParams)
+		if (!accessTokenResponse.access_token) {
+			throw new VIDPError(
+				VIDPAccessTokenErrorCodes.missing_access_token,
+				"IDP did not return an access token. Check that you specified a valid scope URL.",
+				VIDPErrorSources.accessTokenRequest
+			)
+		}
 
 		const {token: idToken, tokenDecoded: idTokenDecoded} = validateVIDPToken<IVIDPIDToken>({
 			audience: this.settings.accessTokenParams.client_id,
