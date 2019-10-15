@@ -1,4 +1,4 @@
-import { NextFunction, Request } from "express"
+import { Request } from "express"
 import { getVIDPMetadata } from "../auth/getVIDPMetadata"
 import { parseVIDPAccessToken } from "../auth/parseVIDPToken"
 import { refreshVIDPAccessToken } from "../auth/refreshVIDPAccessToken"
@@ -8,7 +8,8 @@ import { VIDPError, VIDPErrorSources, VIDPRefreshTokenErrorCodes } from "../erro
 import {
 	IVIDPAccessToken,
 	IVIDPAccessTokenData,
-	IVIDPWebAppStrategySettings
+	IVIDPWebAppStrategySettings,
+	RefreshTokenMiddlewareFunc
 } from "../interfaces"
 
 const resolveToken = (
@@ -37,10 +38,8 @@ export const createRefreshTokenMiddleware = (
 		options: IVIDPWebAppStrategySettings,
 		onTokenRefreshed: ((tokenData: IVIDPAccessTokenData, req: Request) => void | Promise<void>),
 		metadataURL: string
-	) => (
-		tokenResolverOrApiScope: (string | ((req: Request) => IVIDPAccessTokenData | Promise<IVIDPAccessTokenData>)),
-		refreshStrategy?: ((token: IVIDPAccessTokenData, req: Request) => boolean)
-	) => async (req: any, res: any, next: NextFunction) => {
+	): RefreshTokenMiddlewareFunc => (tokenResolverOrApiScope, refreshStrategy?) =>
+	async (req, res, next) => {
 	try {
 		const oldToken = await resolveToken(tokenResolverOrApiScope)(req)
 		if (!oldToken) {
