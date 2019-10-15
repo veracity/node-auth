@@ -388,6 +388,7 @@ header|IVIDPJWTTokenHeader|
 payload|TPayload|
 signature|string|
 
+
 ### VIDPRequestErrorCodes
 
 
@@ -417,7 +418,7 @@ Property|Type|Description
 
 Property|Type|Description
 -|-|-
-"malfomed_token"|"malfomed_token"|The token is malformed. It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
+"malfomed_token"|"malfomed_token"|The token is malformed.<br>It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
 "missing_header"|"missing_header"|The token is malformed. Its header is missing.
 "missing_payload"|"missing_payload"|The token is malformed. Its payload is missing.
 "missing_signature"|"missing_signature"|The token is malformed. Its signature
@@ -431,15 +432,15 @@ Property|Type|Description
 Property|Type|Description
 -|-|-
 "missing_required_setting"|"missing_required_setting"|A required setting was missing. See description for more information.
-"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly or if an attacker is attempting a replay attack.
+"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly<br>or if an attacker is attempting a replay attack.
 "verifier_error"|"verifier_error"|An error occured in the verifier function called once the authentication is completed.
-"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error. Check the error details or innerError for more information.
+"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error.<br>Check the error details or innerError for more information.
 
 ### VIDPRefreshTokenErrorCodes
 
 
 Property|Type|Description
 -|-|-
-"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver. See description for more details.
+"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver.<br>See description for more details.
 
 <!-- /types -->
