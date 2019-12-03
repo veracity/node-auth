@@ -6,7 +6,6 @@ import {
 	IVIDPMetadatWithJWKs
 } from "../internalInterfaces/VIDPReqRes"
 import { createUid } from "../utils/createUid"
-import { IMemCache } from "../utils/MemCache"
 import {
 	createVIDPAuthorizationUrl,
 	DEFAULT_VIDP_AUTHORIZATION_URL_PARAMS,
@@ -24,6 +23,7 @@ export interface IRequestLike {
 	query: {[key: string]: any}
 	body?: any
 	veracityAuthState?: {[key: string]: any}
+	session: any
 }
 
 export interface IVIDPOpenIDSettings {
@@ -48,8 +48,8 @@ export interface IOpenIDCLoginContextState {
 /**
  * This class manages a login sequence where 0 or more access tokens are needed to be acquired.
  * It can be used both for web and native applications.
- * It keeps an internal cache of the login state for a user using the provided memCache instance.
- * There is no dependency on session at all.
+ * It depends on express-session or a session manager with a compatable API in order
+ * to support cases where the application is served by more than on instance
  */
 export class VIDPOpenIDContext {
 	private _currentContextState?: IOpenIDCLoginContextState
@@ -58,8 +58,7 @@ export class VIDPOpenIDContext {
 		public req: IRequestLike,
 		public settings: IVIDPOpenIDSettings,
 		public metadata: IVIDPMetadatWithJWKs,
-		public memCache: IMemCache,
-		public memCacheKeyPrefix: string = "vidpOpenIDContext_"
+		public sessionKeyPrefix: string = "vidpOpenIDContext_"
 	) { }
 
 	/**
@@ -101,8 +100,8 @@ export class VIDPOpenIDContext {
 
 		const authResponse = this._authResponseParams
 		if (authResponse) {
-			const stateKey = this.memCacheKeyPrefix+authResponse.state
-			this._currentContextState = this.memCache.get<IOpenIDCLoginContextState>(stateKey)
+			const stateKey = this.sessionKeyPrefix+authResponse.state
+			this._currentContextState = this.req.session[stateKey] as IOpenIDCLoginContextState
 			if (!this._currentContextState) {
 				throw new VIDPError(
 					VIDPStrategyErrorCodes.invalid_internal_state,
@@ -143,7 +142,6 @@ export class VIDPOpenIDContext {
 	 */
 	public async next() {
 		this._throwIfAuthResponseError()
-
 		try {
 			const authResponse = this._authResponseParams
 			let contextState = this._contextState
@@ -165,7 +163,7 @@ export class VIDPOpenIDContext {
 				}
 			}
 
-			this.memCache.set(this.memCacheKeyPrefix+contextState.stateKey, contextState)
+			this.req.session[this.sessionKeyPrefix+contextState.stateKey] = contextState
 			return createVIDPAuthorizationUrl(this._getAuthParams(nextScope))
 		} catch (error) {
 			if (error instanceof VIDPError) {
@@ -185,7 +183,7 @@ export class VIDPOpenIDContext {
 
 	private _addTokenDataToContextState(tokenData: IVIDPTokenData) {
 		const oldContextState = this._contextState
-		this.memCache.remove(oldContextState.stateKey)
+		delete this.req.session[this.sessionKeyPrefix + oldContextState.stateKey]
 		this._currentContextState = undefined
 		return this._currentContextState = {
 			...oldContextState,

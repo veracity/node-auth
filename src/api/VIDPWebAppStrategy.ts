@@ -7,7 +7,14 @@ import { VIDPOpenIDContext } from "../auth/VIDPOpenIDContext"
 import { VERACITY_API_SCOPES, VERACITY_METADATA_ENDPOINT } from "../constants"
 import { VIDPError, VIDPErrorSources, VIDPStrategyErrorCodes } from "../errors"
 import { IVIDPTokenData, IVIDPWebAppStrategySettings } from "../interfaces"
-import { MemCache, memCacheInstance } from "../utils/MemCache"
+
+/**
+ * Express request object with key session that is express-session
+ * or other, compatable session manager
+ */
+interface IRequestWithSession extends Request {
+	session: any
+}
 
 export type VIDPWebAppStrategyVerifier<TUser = any> = (
 	data: IVIDPTokenData, req: Request, done: (err: any, user?: TUser, info?: any) => void) => void | Promise<void>
@@ -28,8 +35,7 @@ export class VIDPWebAppStrategy<TUser = any> implements Strategy {
 
 	public constructor(
 		settings: IVIDPWebAppStrategySettings,
-		private verifier: VIDPWebAppStrategyVerifier<TUser>,
-		private memCache: MemCache = memCacheInstance
+		private verifier: VIDPWebAppStrategyVerifier<TUser>
 	) {
 		this.settings = {
 			apiScopes: [VERACITY_API_SCOPES.services],
@@ -67,14 +73,14 @@ export class VIDPWebAppStrategy<TUser = any> implements Strategy {
 		}
 	}
 
-	public async authenticate(req: Request, options?: any) {
+	public async authenticate(req: IRequestWithSession, options?: any) {
 		try {
 			const metadata = await getVIDPMetadata(this.settings.metadataURL)
 			const context = new VIDPOpenIDContext(req, {
 				apiScopes: this.settings.apiScopes,
 				authParams: this.authParams,
 				accessTokenParams: this.accessTokenParams
-			}, metadata, this.memCache)
+			}, metadata)
 
 			const nextOp = await context.next()
 			if (!nextOp) { // We are done with authentication

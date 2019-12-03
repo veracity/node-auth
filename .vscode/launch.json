@@ -27,6 +27,12 @@
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
 			"port": 9229
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Launch 101-JS-Auth",
+			"program": "${workspaceFolder}\\samples\\101-JS-Auth\\start.js"
 		}
 	]
 }
