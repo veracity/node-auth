@@ -24,6 +24,7 @@ describe("makeSessionConfigObject", () => {
 			name: "veracity.app.session",
 			secret: "dummy.session.secret",
 			resave: false,
+			unset: "destroy",
 			saveUninitialized: false,
 			store: dummyStore,
 			cookie: {
@@ -45,6 +46,7 @@ describe("makeSessionConfigObject", () => {
 			resave: false,
 			saveUninitialized: false,
 			store: dummyStore,
+			unset: "destroy",
 			cookie: {
 				httpOnly: true,
 				secure: true,

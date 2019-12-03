@@ -1,6 +1,9 @@
 # Veracity Authentication library for NodeJS
 This library provides utilities that help with authentication against the Veracity Identity Provider.
 
+## Version 2.0 released
+The libray now store user data in the session object from [`express-session`](https://www.npmjs.com/package/express-session) (`req.session`). This change is done due to issues found with the version 1 of this package when running multiple node.exe processes on the same server.
+
 ## Version 1.0 released
 Version `1.0.0` is the first officially released and supported implementation of this library. The API has been changed from version `0.3.1-beta` and is not backwards compatible. This documentation as been revamped to describe the new library. See the code samples for detailed implementation instructions.
 

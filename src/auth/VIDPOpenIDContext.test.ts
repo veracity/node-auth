@@ -32,12 +32,6 @@ const {
 	requestVIDPAccessToken: jest.Mock
 }
 
-const mockCache = {
-	set: jest.fn((key: any, data: any) => data),
-	remove: jest.fn(),
-	get: jest.fn()
-}
-
 const HTTPVerbs = {
 	get: "GET",
 	post: "POST"
@@ -68,7 +62,8 @@ describe("VIDPOpenIDContext", () => {
 		describe("login", () => {
 			const mockRequest: any = {
 				method: HTTPVerbs.get,
-				query: {}
+				query: {},
+				session: {}
 			}
 			it("can be constructed", () => {
 				let instance: VIDPOpenIDContext = undefined as any
@@ -76,8 +71,7 @@ describe("VIDPOpenIDContext", () => {
 					instance = new VIDPOpenIDContext(
 						mockRequest,
 						mockSettings,
-						mockFullMetadata,
-						mockCache
+						mockFullMetadata
 					)
 				}).not.toThrow()
 				expect(instance).toBeDefined()
@@ -89,8 +83,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const contextState = instance["_contextState"]
 				expect(contextState.data).toEqual({})
@@ -104,8 +97,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				expect(instance["_authResponseParams"]).not.toBeDefined()
 			})
@@ -113,8 +105,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				expect(instance["_authResponseError"]).not.toBeDefined()
 			})
@@ -122,8 +113,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const nextResult = await instance.next()
 				const state = instance["_currentContextState"]!.stateKey
@@ -140,28 +130,30 @@ describe("VIDPOpenIDContext", () => {
 				veracityAuthState: {
 					someSecretState: true,
 					message: "this should be persisted"
-				}
+				},
+				session: {}
 			}
 			const mockLoginResponsePost: any = {
 				method: HTTPVerbs.post,
 				body: {
 					state: "abc123def456ghi789",
 					id_token: mockIdToken.token
-				}
+				},
+				session: {}
 			}
 			const mockLoginResponseGet: any = {
 				method: HTTPVerbs.get,
 				query: {
 					state: "abc123def456ghi789",
 					id_token: mockIdToken.token
-				}
+				},
+				session: {}
 			}
 			it("creates a proper login url", async () => {
 				const instance = new VIDPOpenIDContext(
 					mockLoginRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const nextResult = await instance.next()
 				const state = instance["_currentContextState"]!.stateKey
@@ -172,18 +164,17 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponsePost,
 					mockSettings,
 					mockFullMetadata,
-					mockCache,
 					"prefix_"
 				)
 				validateVIDPToken.mockReturnValue({
 					token: mockIdToken.token,
 					tokenDecoded: mockIdToken.idTokenDecoded
 				})
-				mockCache.get.mockReturnValueOnce({
-					stateKey: "prefix_"+mockLoginResponsePost.state,
+				mockLoginResponsePost.session["prefix_"+mockLoginResponsePost.body.state] = {
+					stateKey: "prefix_"+mockLoginResponsePost.body.state,
 					query: mockLoginRequest.query,
 					data: mockLoginRequest.veracityAuthState
-				})
+				}
 				const nextResult = await instance.next()
 				expect(nextResult).toBe(false)
 				expect(validateVIDPToken.mock.calls.length).toBe(1)
@@ -197,18 +188,17 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponseGet,
 					mockSettings,
 					mockFullMetadata,
-					mockCache,
 					"prefix_"
 				)
 				validateVIDPToken.mockReturnValue({
 					token: mockIdToken.token,
 					tokenDecoded: mockIdToken.idTokenDecoded
 				})
-				mockCache.get.mockReturnValueOnce({
-					stateKey: "prefix_"+mockLoginResponsePost.state,
+				mockLoginResponseGet.session["prefix_"+mockLoginResponseGet.query.state] = {
+					stateKey: "prefix_"+mockLoginResponseGet.query.state,
 					query: mockLoginRequest.query,
 					data: mockLoginRequest.veracityAuthState
-				})
+				}
 				const nextResult = await instance.next()
 				expect(nextResult).toBe(false)
 				expect(validateVIDPToken.mock.calls.length).toBe(1)
@@ -230,7 +220,8 @@ describe("VIDPOpenIDContext", () => {
 		describe("first login", () => {
 			const mockRequest: any = {
 				method: HTTPVerbs.get,
-				query: {}
+				query: {},
+				session: {}
 			}
 			it("can be constructed", () => {
 				let instance: VIDPOpenIDContext = undefined as any
@@ -238,8 +229,7 @@ describe("VIDPOpenIDContext", () => {
 					instance = new VIDPOpenIDContext(
 						mockRequest,
 						mockSettings,
-						mockFullMetadata,
-						mockCache
+						mockFullMetadata
 					)
 				}).not.toThrow()
 				expect(instance).toBeDefined()
@@ -251,8 +241,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const contextState = instance["_contextState"]
 				expect(contextState.data).toEqual({})
@@ -266,8 +255,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				expect(instance["_authResponseParams"]).not.toBeDefined()
 			})
@@ -275,8 +263,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				expect(instance["_authResponseError"]).not.toBeDefined()
 			})
@@ -284,8 +271,7 @@ describe("VIDPOpenIDContext", () => {
 				const instance = new VIDPOpenIDContext(
 					mockRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const nextResult = await instance.next()
 				const state = instance["_currentContextState"]!.stateKey
@@ -295,7 +281,8 @@ describe("VIDPOpenIDContext", () => {
 		describe("next()", () => {
 			const mockLoginRequest: any = {
 				method: HTTPVerbs.get,
-				query: {}
+				query: {},
+				session: {}
 			}
 			const mockLoginResponse1Post: any = {
 				method: HTTPVerbs.post,
@@ -303,7 +290,8 @@ describe("VIDPOpenIDContext", () => {
 					state: "mockLoginResponse1Post",
 					id_token: mockIdToken.token,
 					code: "mockLoginResponse1PostCode"
-				}
+				},
+				session: {}
 			}
 			const mockLoginResponse1Get: any = {
 				method: HTTPVerbs.post,
@@ -311,7 +299,8 @@ describe("VIDPOpenIDContext", () => {
 					state: "mockLoginResponse1Get",
 					id_token: mockIdToken.token,
 					code: "mockLoginResponse1GetCode"
-				}
+				},
+				session: {}
 			}
 			const mockLoginResponse2Post: any = {
 				method: HTTPVerbs.post,
@@ -319,7 +308,8 @@ describe("VIDPOpenIDContext", () => {
 					state: "mockLoginResponse2Post",
 					id_token: mockIdToken.token,
 					code: "mockLoginResponse2PostCode"
-				}
+				},
+				session: {}
 			}
 			const mockLoginResponse2Get: any = {
 				method: HTTPVerbs.post,
@@ -327,14 +317,14 @@ describe("VIDPOpenIDContext", () => {
 					state: "mockLoginResponse2Get",
 					id_token: mockIdToken.token,
 					code: "mockLoginResponse2GetCode"
-				}
+				},
+				session: {}
 			}
 			it("creates a proper login url", async () => {
 				const instance = new VIDPOpenIDContext(
 					mockLoginRequest,
 					mockSettings,
-					mockFullMetadata,
-					mockCache
+					mockFullMetadata
 				)
 				const nextResult = await instance.next()
 				const state = instance["_currentContextState"]!.stateKey
@@ -345,14 +335,14 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponse1Post,
 					mockSettings,
 					mockFullMetadata,
-					mockCache
+					"prefix_"
 				)
-				mockCache.get.mockReturnValueOnce({
+				mockLoginResponse1Post.session["prefix_"+mockLoginResponse1Post.body.state] = {
 					stateKey: "prefix_"+mockLoginResponse1Post.body.state,
 					currentScope: mockSettings.apiScopes![0],
 					query: mockLoginRequest.query,
 					data: mockLoginRequest.veracityAuthState
-				})
+				}
 
 				const scopes = mockSettings.apiScopes!
 				validateVIDPToken.mockReturnValueOnce({
@@ -403,14 +393,14 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponse1Get,
 					mockSettings,
 					mockFullMetadata,
-					mockCache
+					"prefix_"
 				)
-				mockCache.get.mockReturnValueOnce({
+				mockLoginResponse1Get.session["prefix_"+mockLoginResponse1Get.body.state] = {
 					stateKey: "prefix_"+mockLoginResponse1Get.body.state,
 					currentScope: mockSettings.apiScopes![0],
 					query: mockLoginRequest.query,
 					data: mockLoginRequest.veracityAuthState
-				})
+				}
 
 				const scopes = mockSettings.apiScopes!
 				validateVIDPToken.mockReturnValueOnce({
@@ -461,7 +451,7 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponse2Post,
 					mockSettings,
 					mockFullMetadata,
-					mockCache
+					"prefix_"
 				)
 				const mockContextState = {
 					stateKey: "prefix_"+mockLoginResponse1Post.body.state,
@@ -490,7 +480,7 @@ describe("VIDPOpenIDContext", () => {
 						}
 					}
 				}
-				mockCache.get.mockReturnValueOnce(mockContextState)
+				mockLoginResponse2Post.session["prefix_"+mockLoginResponse2Post.body.state] = mockContextState
 
 				const scopes = mockSettings.apiScopes!
 				validateVIDPToken.mockReturnValueOnce({
@@ -541,7 +531,7 @@ describe("VIDPOpenIDContext", () => {
 					mockLoginResponse2Get,
 					mockSettings,
 					mockFullMetadata,
-					mockCache
+					"prefix_"
 				)
 				const mockContextState = {
 					stateKey: "prefix_"+mockLoginResponse2Get.body.state,
@@ -570,7 +560,7 @@ describe("VIDPOpenIDContext", () => {
 						}
 					}
 				}
-				mockCache.get.mockReturnValueOnce(mockContextState)
+				mockLoginResponse2Get.session["prefix_"+mockLoginResponse2Get.body.state] = mockContextState
 
 				const scopes = mockSettings.apiScopes!
 				validateVIDPToken.mockReturnValueOnce({
