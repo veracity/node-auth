@@ -25,26 +25,16 @@ Version `1.0.0` is the first officially released and supported implementation of
 - [Authentication process](#authentication-process)
 - [Logging out](#logging-out)
 - [Data structures](#data-structures)
+  * [IEndUserConfig](#ienduserconfig)
   * [IRouterLike](#irouterlike)
-  * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
   * [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
   * [IVIDPAccessTokenData](#ividpaccesstokendata)
   * [IVIDPAccessToken](#ividpaccesstoken)
-  * [IVIDPConfiguration](#ividpconfiguration)
-  * [IVIDPWebAppConfiguration](#ividpwebappconfiguration)
-  * [IVIDPIDTokenPayload](#ividpidtokenpayload)
-  * [IVIDPIDTokenData](#ividpidtokendata)
-  * [IVIDPTokenData](#ividptokendata)
   * [IVIDPWebAppStrategySettings](#ividpwebappstrategysettings)
   * [IVIDPJWTTokenHeader](#ividpjwttokenheader)
   * [IVIDPJWTTokenData](#ividpjwttokendata)
   * [IVIDPJWTTokenPayloadCommonClaims](#ividpjwttokenpayloadcommonclaims)
   * [IVIDPJWTToken](#ividpjwttoken)
-  * [VIDPRequestErrorCodes](#vidprequesterrorcodes)
-  * [VIDPAccessTokenErrorCodes](#vidpaccesstokenerrorcodes)
-  * [VIDPTokenValidationErrorCodes](#vidptokenvalidationerrorcodes)
-  * [VIDPStrategyErrorCodes](#vidpstrategyerrorcodes)
-  * [VIDPRefreshTokenErrorCodes](#vidprefreshtokenerrorcodes)
 
 <!-- tocstop -->
 
@@ -234,6 +224,24 @@ app.get("/logout", (req, res) => {
 The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor. Below is an export of all public types.
 
 <!-- types -->
+### IEndUserConfig
+
+
+Property|Type|Description
+-|-|-
+app|IRouterLike|The Express application instance
+errorPath?|string|Where to redirect user on error
+apiKey|string|API Management Subscription Key obtained from developer.veracity.com
+loginPath?|string|The path where login will be configured
+logoutPath?|string|The path where logout will be configured
+logLevel?|"error" \| "warning" | "info"|
+session|IMakeSessionConfigObjectOptions|
+strategy|IVIDPWebAppStrategySettings|
+onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
+onVerify?|VerifyOIDCFunction|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
+onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
+onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out.<br>The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
+
 
 ### IRouterLike
 *extends Pick<Router, "use" | "get" | "post">*
@@ -241,23 +249,6 @@ The library makes use of several data structures. They are all defined as TypeSc
 Property|Type|Description
 -|-|-
 
-
-### ISetupWebAppAuthSettings
-
-
-Property|Type|Description
--|-|-
-name?|string|An optional name for the strategy when registering with passport.
-app|IRouterLike|The express application to configure or the router instance.
-session|IMakeSessionConfigObjectOptions|Session configuration
-strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
-loginPath?|string|The path where login will be configured
-logoutPath?|string|The path where logout will be configured
-onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
-onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
-onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
-onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out.<br>The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
-onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect.<br>If not defined will pass the error on to the default error handler in the app or router.
 
 ### IVIDPAccessTokenPayload
 *extends IVIDPJWTTokenPayloadCommonClaims*
@@ -267,8 +258,8 @@ Property|Type|Description
 azp|string|
 userId|string|The users unique ID within Veracity.
 dnvglAccountName|string|The account name for the user.
-myDnvglGuid⬇|string|The old id for the user.
-oid|string|An object id within the Veracity IDP. Do not use this for user identification @see userId
+myDnvglGuid⬇|string|**Deprecated:**  - The old id for the user.
+oid|string|An object id within the Veracity IDP. Do not use this for user identification<br>@see userId
 upn|string|
 scp|string|
 
@@ -287,61 +278,16 @@ Property|Type|Description
 -|-|-
 
 
-### IVIDPConfiguration
-
-
-Property|Type|Description
--|-|-
-clientID|string|Your applications client id from the Veracity for Developers Project Portal.
-replyURL|string|One of your applications reply urls from the Veracity for Developers Portal.
-
-### IVIDPWebAppConfiguration
-*extends IVIDPConfiguration*
-
-Property|Type|Description
--|-|-
-clientSecret|string|Your applications client secret fromt he Veracity for Developers Project Portal.
-
-### IVIDPIDTokenPayload
-*extends IVIDPJWTTokenPayloadCommonClaims*
-
-Property|Type|Description
--|-|-
-c_hash?|string|Hash of the accompanying authorization code if this token is part of an authorization code flow.
-at_hash?|string|Hash of the accompanying access token if this was part of an access token exchange.
-acr|string|
-auth_time|number|
-userId|string|The unique Veracity ID of the user.
-dnvglAccountName|string|
-myDnvglGuid⬇|string|Legacy Veracity ID of the user. Use userId claim instead.
-oid|string|The object id within the Veracity IDP. Do not use this for user identification as it is not propagated to other Veracity services.
-upn|string|
-
-### IVIDPIDTokenData
-*extends IVIDPJWTTokenData<IVIDPIDTokenPayload>*
-
-Property|Type|Description
--|-|-
-export interface IVIDPIDToken extends IVIDPJWTToken<IVIDPIDTokenPayload> { }|unspecified|
-
-### IVIDPTokenData
-
-
-Property|Type|Description
--|-|-
-idToken|IVIDPIDTokenData|The parsed identity token.
-accessTokens|{[apiScope: string]: IVIDPAccessTokenData}|Any access tokens recievied indexed by their associated scope.
-
 ### IVIDPWebAppStrategySettings
 
 
 Property|Type|Description
 -|-|-
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
-clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub. Required for web applications, but not for native applications.
+clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
-metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found. Defaults to the constant VERACITY_METADATA_ENDPOINT.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
+metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
 
@@ -390,60 +336,5 @@ Property|Type|Description
 header|IVIDPJWTTokenHeader|
 payload|TPayload|
 signature|string|
-
-
-### VIDPRequestErrorCodes
-
-
-Property|Type|Description
--|-|-
-"read_timeout"|"read_timeout"|A timeout occured when waiting to read data from the server.
-"connect_timeout"|"connect_timeout"|A timeout occurred when waiting to establish a connection to the server.
-"status_code_error"|"status_code_error"|The request returned a non 200 status code.
-
-### VIDPAccessTokenErrorCodes
-
-
-Property|Type|Description
--|-|-
-"invalid_request"|"invalid_request"|Protocol error, such as a missing required parameter.
-"invalid_grant"|"invalid_grant"|The authorization code or PKCE code verifier is invalid or has expired.
-"unauthorized_client"|"unauthorized_client"|The authenticated client isn't authorized to use this authorization grant type.
-"invalid_client"|"invalid_client"|Client authentication failed.
-"unsupported_grant_type"|"unsupported_grant_type"|The authorization server does not support the authorization grant type.
-"invalid_resource"|"invalid_resource"|The target resource is invalid because it does not exist, Azure AD can't find it, or it's not correctly configured.
-"interaction_required"|"interaction_required"|The request requires user interaction. For example, an additional authentication step is required.
-"temporarily_unavailable"|"temporarily_unavailable"|The server is temporarily too busy to handle the request.
-"missing_access_token"|"missing_access_token"|The IPD did not return an access token. Check that you specified a valid scope.
-
-### VIDPTokenValidationErrorCodes
-
-
-Property|Type|Description
--|-|-
-"malfomed_token"|"malfomed_token"|The token is malformed.<br>It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
-"missing_header"|"missing_header"|The token is malformed. Its header is missing.
-"missing_payload"|"missing_payload"|The token is malformed. Its payload is missing.
-"missing_signature"|"missing_signature"|The token is malformed. Its signature
-"no_such_public_key"|"no_such_public_key"|The token requested a public key with an id that does not exist in the metadata endpoint.
-"verification_error"|"verification_error"|An error occured when verifying the token against nonce, clientId, issuer, tolerance or public key.
-"incorrect_hash"|"incorrect_hash"|The token did not match the expected hash
-
-### VIDPStrategyErrorCodes
-
-
-Property|Type|Description
--|-|-
-"missing_required_setting"|"missing_required_setting"|A required setting was missing. See description for more information.
-"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly<br>or if an attacker is attempting a replay attack.
-"verifier_error"|"verifier_error"|An error occured in the verifier function called once the authentication is completed.
-"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error.<br>Check the error details or innerError for more information.
-
-### VIDPRefreshTokenErrorCodes
-
-
-Property|Type|Description
--|-|-
-"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver.<br>See description for more details.
 
 <!-- /types -->

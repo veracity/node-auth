@@ -1,28 +1,21 @@
 import { NextFunction, Request, Response } from "express"
-import { VIDPWebAppStrategyVerifier } from "../api"
-import { VIDPError } from "../errors"
-import { IMakeSessionConfigObjectOptions } from "../helpers"
-import { IRouterLike } from "./IRouterLike"
-import { IVIDPWebAppStrategySettings } from "./IVIDPWebAppStrategySettings"
+import { VerifyOIDCFunction } from "passport-azure-ad"
+import { IRouterLike, IVIDPWebAppStrategySettings } from "."
+import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
-export interface ISetupWebAppAuthSettings {
+export interface IEndUserConfig {
 	/**
-	 * An optional name for the strategy when registering with passport.
-	 */
-	name?: string
-	/**
-	 * The express application to configure or the router instance.
+	 * The Express application instance
 	 */
 	app: IRouterLike
 	/**
-	 * Session configuration
+	 * Where to redirect user on error
 	 */
-	session: IMakeSessionConfigObjectOptions
+	errorPath?: string
 	/**
-	 * Configuration for the strategy you want to use.
+	 * API Management Subscription Key obtained from developer.veracity.com
 	 */
-	strategy: IVIDPWebAppStrategySettings
-
+	apiKey: string
 	/**
 	 * The path where login will be configured
 	 */
@@ -31,7 +24,12 @@ export interface ISetupWebAppAuthSettings {
 	 * The path where logout will be configured
 	 */
 	logoutPath?: string
-
+	/**
+	 *
+	 */
+	logLevel?: "error" | "warning" | "info"
+	session: IMakeSessionConfigObjectOptions
+	strategy: IVIDPWebAppStrategySettings
 	/**
 	 * Provide a function that executes before the login process starts.
 	 * It executes as a middleware so remember to call next() when you are done.
@@ -41,7 +39,7 @@ export interface ISetupWebAppAuthSettings {
 	 * The verifier function passed to the strategy.
 	 * If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
 	 */
-	onVerify?: VIDPWebAppStrategyVerifier
+	onVerify?: VerifyOIDCFunction
 	/**
 	 * A route handler to execute once the login is completed.
 	 * The default will route the user to the returnTo query parameter path or to the root path.
@@ -56,5 +54,5 @@ export interface ISetupWebAppAuthSettings {
 	 * An error handler that is called if an error response is received from the Veracity IDP authentication redirect.
 	 * If not defined will pass the error on to the default error handler in the app or router.
 	 */
-	onLoginError?: (error: VIDPError, req: Request, res: Response, next: NextFunction) => void
+	// onLoginError?: (error: VIDPError, req: Request, res: Response, next: NextFunction) => void
 }
