@@ -3,7 +3,9 @@ import { NextFunction, Request, Response } from "express"
 import expressSession from "express-session"
 import passport from "passport"
 import { OIDCStrategy, VerifyOIDCFunction } from "passport-azure-ad"
-import { refreshTokenMiddleware } from "../api/refreshToken"
+import { createRefreshTokenMiddleware } from "../api/createRefreshTokenMiddleware"
+import { getUrlPath } from "../utils/getUrlPath"
+import { IDefaultAuthConfig, IFullAuthConfig } from './../interfaces/IDefaultAuthConfig'
 import { IEndUserConfig } from './../interfaces/IEndUserConfig'
 import authConfig from "./defaultAuthConfig"
 import { makeSessionConfigObject } from "./makeSessionConfigObject"
@@ -16,16 +18,11 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 	next()
 }
 
-// Helper that will perform the authentication against B2C/ADFS.
-const authenticator = (req: Request, res: Response, next: NextFunction) => {
-	// Construct middleware that can perform authentication
-	return passport.authenticate("veracity-oidc", {
-		failureRedirect: "/error" // Where to route the user if the authentication fails
-	})(req, res, next)
-}
+const authenticator = (errorPath: string) => passport.authenticate("veracity-oidc", {
+	failureRedirect: errorPath // Where to route the user if the authentication fails
+})
 
 const verifier: VerifyOIDCFunction = (iss, sub, profile, jwtClaims, accessToken, refreshToken, params, done) => {
-	console.log("Params: ", params)
 	const { expires_in, expires_on } = params
 	const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
 	if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
@@ -36,7 +33,6 @@ const verifier: VerifyOIDCFunction = (iss, sub, profile, jwtClaims, accessToken,
 		displayName: profile.displayName,
 
 		// "https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75"
-
 		tokens: {
 			services: {
 				access_token: accessToken,
@@ -49,32 +45,59 @@ const verifier: VerifyOIDCFunction = (iss, sub, profile, jwtClaims, accessToken,
 	done(null, user) // Tell passport that no error occured (null) and which user object to store with the session.
 }
 
-const mergeConfig = (defaultConfig: typeof authConfig, endUserConfig: Omit<IEndUserConfig, "app">) => {
-	defaultConfig.oidcConfig.clientID = endUserConfig.strategy.clientId
-	// defaultConfig.oidcConfig.clientSecret = endUserConfig.strategy.clientSecret
-	defaultConfig.oidcConfig.redirectUrl = endUserConfig.strategy.replyUrl
-	if (endUserConfig.strategy.apiScopes) defaultConfig.oidcConfig.scope = [...defaultConfig.oidcConfig.scope, ...endUserConfig.strategy.apiScopes]
-	if (endUserConfig.strategy.metadataURL) defaultConfig.oidcConfig.identityMetadata = endUserConfig.strategy.metadataURL
-	return {...defaultConfig, ...endUserConfig}
+const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<IEndUserConfig, "app">): IFullAuthConfig => {
+	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify} = endUserConfig
+	const config = {
+		...defaultConfig,
+		oidcConfig: {
+			...defaultConfig.oidcConfig,
+			clientID: endUserConfig.strategy.clientId,
+			clientSecret: endUserConfig.strategy.clientSecret,
+			redirectUrl: endUserConfig.strategy.replyUrl,
+			scope: [...(defaultConfig.oidcConfig.scope || []), ...(endUserConfig.strategy.apiScopes || [])],
+			identityMetadata: endUserConfig.strategy.metadataURL ? endUserConfig.strategy.metadataURL : defaultConfig.oidcConfig.identityMetadata
+		},
+		session: endUserConfig.session
+	}
+	if (endUserConfig.logLevel) config.oidcConfig.loggingLevel = endUserConfig.logLevel
+	if (onBeforeLogin) config.onBeforeLogin = onBeforeLogin
+	if (onLoginComplete) config.onLoginComplete = onLoginComplete
+	if (onLoginError) config.onLoginError = onLoginError
+	if (onLogout) config.onLogout = onLogout
+	if (onVerify) config.onVerify = onVerify
+	return config
+}
+
+const validateConfig = (config: IEndUserConfig) => {
+	if (!config.app) throw new Error("'app' is required in config.")
+	if (!config.strategy) throw new Error("'strategy' is required in config.")
+	if (!config.strategy.clientId) throw new Error("'clientId' is required in strategy config.")
+	if (!config.strategy.replyUrl) throw new Error("'replyUrl' is required in strategy config.")
 }
 
 export const setupWebAppAuth = (config: IEndUserConfig) => {
+	validateConfig(config)
 	const { app, ...rest } = config
 
 	const fullConfig = mergeConfig(authConfig, rest)
-	const sessionConfig = makeSessionConfigObject(config.session)
+	const sessionConfig = makeSessionConfigObject(fullConfig.session)
+
+	const {
+		onBeforeLogin,
+		onVerify,
+		onLoginComplete,
+		onLoginError
+	} = fullConfig
 
 	// log.debug("Configuring session")
+
 	// Set up session support for requests
-	app.use(expressSession({
-		...sessionConfig,
-		store: fullConfig.session.store
-	}))
+	app.use(expressSession(sessionConfig))
 
 	// log.debug("Setting up auth strategy")
 
 	// Create and configure the strategy instance that will perform authentication
-	const strategy = new OIDCStrategy(fullConfig.oidcConfig as any, verifier)
+	const strategy = new OIDCStrategy(fullConfig.oidcConfig as any, onVerify || verifier)
 
 	// Register the strategy with passport
 	passport.use("veracity-oidc", strategy)
@@ -92,15 +115,13 @@ export const setupWebAppAuth = (config: IEndUserConfig) => {
 
 	// Our login route. This is where the authentication magic happens.
 	// We must ensure that the policy query parameter is set and we therefore include our small middleware before the actual login process.
-	app.get(fullConfig.loginPath, ensureSignInPolicyQueryParameter(fullConfig.policyName), authenticator, (req: Request, res: Response) => {
+	app.get(fullConfig.loginPath, onBeforeLogin, ensureSignInPolicyQueryParameter(fullConfig.policyName), authenticator(fullConfig.errorPath), (req: Request, res: Response) => {
 		res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
 	})
 
 	// This route is where we retrieve the authentication information posted back from Azure B2C/ADFS.
 	// To perform the necessary steps it needs to parse post data as well as sign in correctly. This is done using the body-parser middleware.
-	app.post("/auth/oidc/loginreturn", bodyParser.urlencoded({ extended: true }), authenticator, (req: Request, res: Response) => {
-		res.redirect("/")
-	})
+	app.post(getUrlPath(fullConfig.oidcConfig.redirectUrl), bodyParser.urlencoded({ extended: true }), authenticator(fullConfig.errorPath), onLoginComplete, onLoginError)
 
 	// Our logout route handles logging out of B2C and removing session information.
 	app.get(fullConfig.logoutPath, (req: Request, res: Response) => { // Overview step 8
@@ -116,6 +137,12 @@ export const setupWebAppAuth = (config: IEndUserConfig) => {
 	})
 
 	return {
-		refreshTokenMiddleware
+		refreshTokenMiddleware: createRefreshTokenMiddleware({
+			clientID: fullConfig.oidcConfig.clientID,
+			tenantID: fullConfig.tenantID,
+			policyName: fullConfig.policyName,
+			clientSecret: fullConfig.oidcConfig.clientSecret,
+			scope: fullConfig.oidcConfig.scope && typeof fullConfig.oidcConfig.scope !== "string" ? fullConfig.oidcConfig.scope.join(" ") : fullConfig.oidcConfig.scope
+		})
 	}
 }

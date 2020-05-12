@@ -26,7 +26,7 @@ const { refreshTokenMiddleware } = setupWebAppAuth({
 	},
 	session: {
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
-		store: encryptedSessionStorage // Use encrypted memory store
+		// store: encryptedSessionStorage // Use encrypted memory store
 	}
 })
 
@@ -39,23 +39,19 @@ app.get("/user", (req, res) => {
 	res.status(401).send("Unauthorized")
 })
 
+// Create an endpoint where we can refresh the services token.
+// By default this will refresh it when it has less than 5 minutes until it expires.
 app.get("/refresh", refreshTokenMiddleware, (req, res) => {
+	res.send("Refreshed token!")
+})
+
+app.get("/test", (req, res, next) => {
 	res.send("OK")
 })
 
-// Create an endpoint where we can refresh the services token.
-// By default this will refresh it when it has less than 5 minutes until it expires.
-// app.get("/refresh", (req, res, next) =>  {
-// 	refreshTokenMiddleware("veracity-oidc", /* */, function(err, accessToken, refreshToken) {
-// 		// You have a new access token, store it in the user object,
-// 		// or use it to make a new request.
-// 		// `refreshToken` may or may not exist, depending on the strategy you are using.
-// 		// You probably don't need it anyway, as according to the OAuth 2.0 spec,
-// 		// it should be the same as the initial refresh token.
-	
-// 	})(req, res, next)
-// })
-
+app.get("/logoutadfs", (req, res, next) => {
+	res.send("Logged out")
+})
 
 // Serve static content from the public folder so we can display the index.html page
 app.use(express.static("public"))

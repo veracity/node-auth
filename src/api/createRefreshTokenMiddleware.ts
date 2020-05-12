@@ -1,31 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { VIDPError } from "../errors"
-import { config } from "../helpers/defaultAuthConfig"
 import { VIDPErrorSources } from './../errors/VIDPError'
-// import { IVIDPJWKWithPEM, IVIDPMetadatWithJWKs } from "../internalInterfaces/VIDPReqRes"
-// import { generatePEM } from "../utils/generatePEM"
 import request from "./request"
-
-/**
- * Requests metadata for a tenant with an obligatory
- * @param tenantId
- * @param policy
- */
-// const getMetadata = async (metadataURL: string): Promise<IVIDPMetadatWithJWKs> => {
-// 	const metadataString = await request(metadataURL)
-// 	const metadata: IVIDPMetadatWithJWKs = JSON.parse(metadataString)
-
-// 	const jwksString = await request(metadata.jwks_uri)
-// 	const jwks: IVIDPJWKWithPEM[] = JSON.parse(jwksString).keys
-
-// 	return {
-// 		...metadata,
-// 		jwks: jwks.map((aJWK) => ({
-// 			...aJWK,
-// 			pem: generatePEM(aJWK.n, aJWK.e)
-// 		}))
-// 	}
-// }
 
 const resolveRefreshToken = (req: Request) => {
 	try {
@@ -36,13 +12,21 @@ const resolveRefreshToken = (req: Request) => {
 	}
 }
 
+interface IRefreshConfig {
+	tenantID: string
+	policyName: string
+	clientID: string
+	clientSecret?: string
+	scope?: string
+}
+
 /**
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/authorization-code-flow#4-refresh-the-token
  * @param req Express.Request
  * @param res Express.Response
  * @param next Express.NextFunction
  */
-export const refreshTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (req: Request, res: Response, next: NextFunction) => {
 	const refreshToken = resolveRefreshToken(req)
 	const endpoint = `https://login.microsoftonline.com/${config.tenantID}/oauth2/v2.0/token?p=${config.policyName}` // `https://${config.tenantID}.b2clogin.com/${config.tenantID}.onmicrosoft.com/${config.policyName}/oauth2/v2.0/token`
 	const payload = {

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { VerifyOIDCFunction } from "passport-azure-ad"
 import { IRouterLike, IVIDPWebAppStrategySettings } from "."
+import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
 export interface IEndUserConfig {
@@ -13,10 +14,6 @@ export interface IEndUserConfig {
 	 */
 	errorPath?: string
 	/**
-	 * API Management Subscription Key obtained from developer.veracity.com
-	 */
-	apiKey: string
-	/**
 	 * The path where login will be configured
 	 */
 	loginPath?: string
@@ -25,9 +22,10 @@ export interface IEndUserConfig {
 	 */
 	logoutPath?: string
 	/**
-	 *
+	 * Logging level
+	 * @default "error"
 	 */
-	logLevel?: "error" | "warning" | "info"
+	logLevel?: "error" | "warn" | "info"
 	session: IMakeSessionConfigObjectOptions
 	strategy: IVIDPWebAppStrategySettings
 	/**
@@ -44,7 +42,7 @@ export interface IEndUserConfig {
 	 * A route handler to execute once the login is completed.
 	 * The default will route the user to the returnTo query parameter path or to the root path.
 	 */
-	onLoginComplete?: (req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,
+	onLoginComplete?: (req: Request, res: Response, next: NextFunction) => void,
 	/**
 	 * A route handler to execute once the user tries to log out.
 	 * The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
@@ -54,5 +52,5 @@ export interface IEndUserConfig {
 	 * An error handler that is called if an error response is received from the Veracity IDP authentication redirect.
 	 * If not defined will pass the error on to the default error handler in the app or router.
 	 */
-	// onLoginError?: (error: VIDPError, req: Request, res: Response, next: NextFunction) => void
+	onLoginError?: (error: VIDPError, req: Request, res: Response, next: NextFunction) => void
 }
