@@ -28,8 +28,8 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish --dry-run
-      - run: npm publish
+      - run: npm ci --prefix .\dist
+      - run: npm publish --dry-run --prefix .\dist
+      - run: npm publish --prefix .\dist
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
