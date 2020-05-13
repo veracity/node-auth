@@ -43,7 +43,7 @@ This library provides utilities that help with authentication against the Veraci
 <!-- tocstop -->
 
 # TODO
-* refresh token
+* logging level
 * Test passed in functions like `onBeforeLogin` etc
 
 ## Installation
