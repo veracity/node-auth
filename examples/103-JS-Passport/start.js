@@ -14,7 +14,7 @@ const {
 	VERACITY_API_SCOPES,
 	VERACITY_LOGOUT_URL,
 	VERACITY_METADATA_ENDPOINT
-} = require("@veracity/node-auth")
+} = require("../../dist")
 
 // Create our express instance
 const app = express()

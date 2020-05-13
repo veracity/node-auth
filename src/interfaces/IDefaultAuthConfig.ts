@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { IOIDCStrategyOptionWithRequest, VerifyOIDCFunction } from "passport-azure-ad"
+import { IOIDCStrategyOptionWithRequest, VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
@@ -14,6 +14,7 @@ export interface IDefaultAuthConfig {
 	logoutPath: string
 	errorPath: string
 	logLevel?: "error"
+	name: string
 	oidcConfig: Omit<IOIDCStrategyOption, "clientID" | "redirectUrl">
 	policyName: string
 	destroySessionUrl: string
@@ -21,7 +22,7 @@ export interface IDefaultAuthConfig {
 	tenantID: string
 	onLogout: (req: Request, res: Response, next: NextFunction) => void
 	onBeforeLogin: (req: Request, res: Response, next: NextFunction) => void
-	onVerify?: VerifyOIDCFunction
+	onVerify: VerifyOIDCFunctionWithReq
 	onLoginComplete: (req: Request, res: Response, next: NextFunction) => void
 	onLoginError: (err: VIDPError, req: Request, res: Response, next: NextFunction) => void
 }

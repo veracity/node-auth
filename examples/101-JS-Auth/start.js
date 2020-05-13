@@ -5,7 +5,8 @@ const { MemoryStore } = require("express-session")
 const {
 	setupWebAppAuth,
 	generateCertificate,
-	createEncryptedSessionStore
+	createEncryptedSessionStore,
+	VIDPWebAppStrategy
 } = require("../../dist")
 
 // Create our express instance
@@ -26,7 +27,16 @@ const { refreshTokenMiddleware } = setupWebAppAuth({
 	},
 	session: {
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
-		// store: encryptedSessionStorage // Use encrypted memory store
+		store: encryptedSessionStorage // Use encrypted memory store
+	},
+	onBeforeLogin: (req, res, next) => {
+		console.log("onBeforeLogin running")
+		req.veracityAuthState = JSON.stringify({redirect: "/here"})
+		next()
+	},
+	onLoginComplete: (req, res, next) => {		
+		const state = JSON.parse(req.veracityAuthState)
+		res.redirect(state.redirect || "/")
 	}
 })
 

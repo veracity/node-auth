@@ -1,6 +1,8 @@
 // tslint:disable: max-classes-per-file
 import { CoreOptions } from "request"
 import requestPromise from "request-promise-native"
+import { VIDPError, VIDPErrorSources } from "../errors"
+import { VIDPRequestErrorCodes } from './../interfaces/VIDPErrorCode'
 
 export class RequestConnectTimeoutError extends Error {
 	public constructor(public url: string, public innerError: Error) {
@@ -28,16 +30,14 @@ export const request = async <TResponse = any>(url: string, options: CoreOptions
 		return response as TResponse
 	} catch (error) {
 		if (error.code === "ETIMEDOUT") {
-			// throw new VIDPError(
-			// 	error.connect ? VIDPRequestErrorCodes.connect_timeout : VIDPRequestErrorCodes.read_timeout,
-			// 	error.connect ? "Request timed out while waiting for a connection" :
-			// 		"Request timed out while waiting for a server response",
-			// 	VIDPErrorSources.request,
-			// 	{},
-			// 	error
-			// )
-			// TODO: Better error handling
-			throw new Error("Request timed out while waiting for a connection")
+			throw new VIDPError(
+				error.connect ? VIDPRequestErrorCodes.connect_timeout : VIDPRequestErrorCodes.read_timeout,
+				error.connect ? "Request timed out while waiting for a connection" :
+					"Request timed out while waiting for a server response",
+				VIDPErrorSources.request,
+				{},
+				error
+			)
 		}
 		throw error
 	}

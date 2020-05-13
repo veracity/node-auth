@@ -6,6 +6,7 @@ export const authConfig: IDefaultAuthConfig = {
 	loginPath: "/login",
 	errorPath: "/error",
 	logoutPath: "/logout",
+	name: "veracity-oidc",
 
 	// The options we must pass to OpenID Connect. See https://github.com/AzureAD/passport-azure-ad
 	oidcConfig: {
@@ -48,6 +49,28 @@ export const authConfig: IDefaultAuthConfig = {
 	},
 	onLoginError: (err: any, req: any, res: any, next: any) => {
 		next(err)
+	},
+	onVerify: (req, iss, sub, profile, jwtClaims, accessToken, refreshToken, params, done) => {
+		const { expires_in, expires_on } = params
+		const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
+		if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
+		if (expires_on) additionalInfo.accessTokenLifetime = Number(expires_on)
+		const user = { // Extract information from the data returned from B2C/ADFS
+			name: jwtClaims.name,
+			id: jwtClaims.oid,
+			displayName: profile.displayName,
+
+			// "https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75"
+			tokens: {
+				services: {
+					access_token: accessToken,
+					refresh_token: refreshToken,
+					...additionalInfo
+				}
+			}
+		}
+
+		done(null, user) // Tell passport that no error occured (null) and which user object to store with the session.
 	}
 }
 

@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express"
-import { VerifyOIDCFunction } from "passport-azure-ad"
+import { VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { IRouterLike, IVIDPWebAppStrategySettings } from "."
 import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
-export interface IEndUserConfig {
+export interface ISetupWebAppAuthSettings {
 	/**
-	 * The Express application instance
+	 * The express application to configure or the router instance.
 	 */
 	app: IRouterLike
 	/**
@@ -26,8 +26,19 @@ export interface IEndUserConfig {
 	 * @default "error"
 	 */
 	logLevel?: "error" | "warn" | "info"
+	/**
+	 * Session configuration for express-session
+	 */
 	session: IMakeSessionConfigObjectOptions
+	/**
+	 * Configuration for the strategy you want to use.
+	 */
 	strategy: IVIDPWebAppStrategySettings
+	/**
+	 * Name of the passport strategy
+	 * @default "veracity-oidc"
+	 */
+	name?: string
 	/**
 	 * Provide a function that executes before the login process starts.
 	 * It executes as a middleware so remember to call next() when you are done.
@@ -37,7 +48,7 @@ export interface IEndUserConfig {
 	 * The verifier function passed to the strategy.
 	 * If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
 	 */
-	onVerify?: VerifyOIDCFunction
+	onVerify?: VerifyOIDCFunctionWithReq
 	/**
 	 * A route handler to execute once the login is completed.
 	 * The default will route the user to the returnTo query parameter path or to the root path.

@@ -2,11 +2,11 @@ import bodyParser from "body-parser"
 import { NextFunction, Request, Response } from "express"
 import expressSession from "express-session"
 import passport from "passport"
-import { OIDCStrategy, VerifyOIDCFunction } from "passport-azure-ad"
 import { createRefreshTokenMiddleware } from "../api/createRefreshTokenMiddleware"
+import { VIDPWebAppStrategy } from "../api/VIDPWebAppStrategy"
+import { ISetupWebAppAuthSettings  } from '../interfaces'
 import { getUrlPath } from "../utils/getUrlPath"
 import { IDefaultAuthConfig, IFullAuthConfig } from './../interfaces/IDefaultAuthConfig'
-import { IEndUserConfig } from './../interfaces/IEndUserConfig'
 import authConfig from "./defaultAuthConfig"
 import { makeSessionConfigObject } from "./makeSessionConfigObject"
 
@@ -18,35 +18,28 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 	next()
 }
 
-const authenticator = (errorPath: string) => passport.authenticate("veracity-oidc", {
-	failureRedirect: errorPath // Where to route the user if the authentication fails
-})
-
-const verifier: VerifyOIDCFunction = (iss, sub, profile, jwtClaims, accessToken, refreshToken, params, done) => {
-	const { expires_in, expires_on } = params
-	const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
-	if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
-	if (expires_on) additionalInfo.accessTokenLifetime = Number(expires_on)
-	const user = { // Extract information from the data returned from B2C/ADFS
-		name: jwtClaims.name,
-		id: jwtClaims.oid,
-		displayName: profile.displayName,
-
-		// "https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75"
-		tokens: {
-			services: {
-				access_token: accessToken,
-				refresh_token: refreshToken,
-				...additionalInfo
-			}
-		}
-	}
-
-	done(null, user) // Tell passport that no error occured (null) and which user object to store with the session.
+const stateString = (state?: string | object) => {
+	if (typeof state === "string") return state
+	if (typeof state === "object") return JSON.stringify(state)
+	return
 }
 
-const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<IEndUserConfig, "app">): IFullAuthConfig => {
-	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify} = endUserConfig
+const authenticator = (name: string, errorPath: string) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
+	return passport.authenticate(name, {
+		customState: stateString(req.veracityAuthState),
+		failureRedirect: errorPath // Where to route the user if the authentication fails
+	} as any)(req, res, next)
+}
+
+const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res: Response, next: NextFunction) => {
+	if (req.body && req.body.state) {
+		req.veracityAuthState = req.body.state
+	}
+	next()
+}
+
+const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISetupWebAppAuthSettings, "app">): IFullAuthConfig => {
+	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name} = endUserConfig
 	const config = {
 		...defaultConfig,
 		oidcConfig: {
@@ -65,17 +58,18 @@ const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<IEnd
 	if (onLoginError) config.onLoginError = onLoginError
 	if (onLogout) config.onLogout = onLogout
 	if (onVerify) config.onVerify = onVerify
+	if (name) config.name = name
 	return config
 }
 
-const validateConfig = (config: IEndUserConfig) => {
+const validateConfig = (config: ISetupWebAppAuthSettings) => {
 	if (!config.app) throw new Error("'app' is required in config.")
 	if (!config.strategy) throw new Error("'strategy' is required in config.")
 	if (!config.strategy.clientId) throw new Error("'clientId' is required in strategy config.")
 	if (!config.strategy.replyUrl) throw new Error("'replyUrl' is required in strategy config.")
 }
 
-export const setupWebAppAuth = (config: IEndUserConfig) => {
+export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	validateConfig(config)
 	const { app, ...rest } = config
 
@@ -97,10 +91,10 @@ export const setupWebAppAuth = (config: IEndUserConfig) => {
 	// log.debug("Setting up auth strategy")
 
 	// Create and configure the strategy instance that will perform authentication
-	const strategy = new OIDCStrategy(fullConfig.oidcConfig as any, onVerify || verifier)
+	const strategy = new VIDPWebAppStrategy(fullConfig.oidcConfig as any, onVerify)
 
 	// Register the strategy with passport
-	passport.use("veracity-oidc", strategy)
+	passport.use(fullConfig.name, strategy)
 
 	// Specify what information about the user should be stored in the session. Here we store the entire user object we define in the 'verifier' function.
 	// You can pick only parts of it if you don't need all the information or if you have user information stored somewhere else.
@@ -115,13 +109,26 @@ export const setupWebAppAuth = (config: IEndUserConfig) => {
 
 	// Our login route. This is where the authentication magic happens.
 	// We must ensure that the policy query parameter is set and we therefore include our small middleware before the actual login process.
-	app.get(fullConfig.loginPath, onBeforeLogin, ensureSignInPolicyQueryParameter(fullConfig.policyName), authenticator(fullConfig.errorPath), (req: Request, res: Response) => {
-		res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
-	})
+	app.get(
+		fullConfig.loginPath,
+		onBeforeLogin,
+		ensureSignInPolicyQueryParameter(fullConfig.policyName),
+		authenticator(fullConfig.name, fullConfig.errorPath),
+		(req: Request, res: Response) => {
+			res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
+		}
+	)
 
 	// This route is where we retrieve the authentication information posted back from Azure B2C/ADFS.
 	// To perform the necessary steps it needs to parse post data as well as sign in correctly. This is done using the body-parser middleware.
-	app.post(getUrlPath(fullConfig.oidcConfig.redirectUrl), bodyParser.urlencoded({ extended: true }), authenticator(fullConfig.errorPath), onLoginComplete, onLoginError)
+	app.post(
+		getUrlPath(fullConfig.oidcConfig.redirectUrl),
+		bodyParser.urlencoded({ extended: true }),
+		authenticator(fullConfig.name, fullConfig.errorPath),
+		ensureVeracityAuthState,
+		onLoginComplete,
+		onLoginError
+	)
 
 	// Our logout route handles logging out of B2C and removing session information.
 	app.get(fullConfig.logoutPath, (req: Request, res: Response) => { // Overview step 8

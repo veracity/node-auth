@@ -28,7 +28,7 @@ interface IRefreshConfig {
  */
 export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (req: Request, res: Response, next: NextFunction) => {
 	const refreshToken = resolveRefreshToken(req)
-	const endpoint = `https://login.microsoftonline.com/${config.tenantID}/oauth2/v2.0/token?p=${config.policyName}` // `https://${config.tenantID}.b2clogin.com/${config.tenantID}.onmicrosoft.com/${config.policyName}/oauth2/v2.0/token`
+	const endpoint = `https://login.microsoftonline.com/${config.tenantID}/oauth2/v2.0/token?p=${config.policyName}`
 	const payload = {
 		client_id: config.clientID,
 		client_secret: config.clientSecret,
@@ -56,7 +56,7 @@ export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (r
 			...additionalInfo
 		}
 	} else {
-		throw new Error("No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
+		throw new VIDPError("missing_token","No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
 	}
 
 	next()
