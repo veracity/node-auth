@@ -5,6 +5,8 @@ TODO
 * Test the code and helpers
 * How to do logging best practice
 * Error handling best practice
+* logging level https://github.com/AzureAD/passport-azure-ad/issues/196
+* Test passed in functions like `onBeforeLogin` etc
 
 ## Develop
 ## Release

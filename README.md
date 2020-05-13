@@ -11,40 +11,40 @@ This library provides utilities that help with authentication against the Veraci
 
 <!-- toc -->
 
-- [TODO](#todo)
-  * [Installation](#installation)
-  * [Examples](#examples)
-  * [Usage](#usage)
-    + [Usage with `setupWebAppAuth` helper](#usage-with-setupwebappauth-helper)
-    + [Usage with `VIDPWebAppStrategy`](#usage-with-vidpwebappstrategy)
-  * [Passing state](#passing-state)
-  * [Check if the user is logged in with `req.isAuthenticated()`](#check-if-the-user-is-logged-in)
-  * [Authentication process](#authentication-process)
-  * [Refresh token](#refresh-token)
-  * [Logging out](#logging-out)
-  * [Error handling](#error-handling)
-  * [Data structures](#data-structures)
-    + [IDefaultAuthConfig](#idefaultauthconfig)
-    + [IFullAuthConfig](#ifullauthconfig)
-    + [IRouterLike](#irouterlike)
-    + [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
-    + [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
-    + [IVIDPAccessTokenData](#ividpaccesstokendata)
-    + [IVIDPAccessToken](#ividpaccesstoken)
-    + [IVIDPWebAppStrategySettings](#ividpwebappstrategysettings)
-    + [IVIDPJWTTokenHeader](#ividpjwttokenheader)
-    + [IVIDPJWTTokenData](#ividpjwttokendata)
-    + [IVIDPJWTTokenPayloadCommonClaims](#ividpjwttokenpayloadcommonclaims)
-    + [IVIDPJWTToken](#ividpjwttoken)
-  * [Helpers](#helpers)
-    + [Encrypting session](#encrypting-session)
-    + [Generate certificate](#generate-certificate)
+- [Installation](#installation)
+- [Examples](#examples)
+- [Usage](#usage)
+  * [Usage with `setupWebAppAuth` helper](#usage-with-setupwebappauth-helper)
+  * [Usage with `VIDPWebAppStrategy`](#usage-with-vidpwebappstrategy)
+- [Passing state](#passing-state)
+- [Check if the user is logged in](#check-if-the-user-is-logged-in)
+- [Authentication process](#authentication-process)
+- [Refresh token](#refresh-token)
+- [Logging out](#logging-out)
+- [Error handling](#error-handling)
+- [Data structures](#data-structures)
+  * [IDefaultAuthConfig](#idefaultauthconfig)
+  * [IFullAuthConfig](#ifullauthconfig)
+  * [IRouterLike](#irouterlike)
+  * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
+  * [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
+  * [IVIDPAccessTokenData](#ividpaccesstokendata)
+  * [IVIDPAccessToken](#ividpaccesstoken)
+  * [IVIDPWebAppStrategySettings](#ividpwebappstrategysettings)
+  * [IVIDPJWTTokenHeader](#ividpjwttokenheader)
+  * [IVIDPJWTTokenData](#ividpjwttokendata)
+  * [IVIDPJWTTokenPayloadCommonClaims](#ividpjwttokenpayloadcommonclaims)
+  * [IVIDPJWTToken](#ividpjwttoken)
+  * [VIDPRequestErrorCodes](#vidprequesterrorcodes)
+  * [VIDPAccessTokenErrorCodes](#vidpaccesstokenerrorcodes)
+  * [VIDPTokenValidationErrorCodes](#vidptokenvalidationerrorcodes)
+  * [VIDPStrategyErrorCodes](#vidpstrategyerrorcodes)
+  * [VIDPRefreshTokenErrorCodes](#vidprefreshtokenerrorcodes)
+- [Helpers](#helpers)
+  * [Encrypting session](#encrypting-session)
+  * [Generate certificate](#generate-certificate)
 
 <!-- tocstop -->
-
-# TODO
-* logging level
-* Test passed in functions like `onBeforeLogin` etc
 
 ## Installation
 Run `npm i @veracity/node-auth` or `yarn add @veracity/node-auth` to install. TypeScript types are included in the package.
@@ -300,8 +300,7 @@ Property|Type|Description
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
 clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to
- slightly improve performance.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
@@ -351,6 +350,59 @@ Property|Type|Description
 header|IVIDPJWTTokenHeader|
 payload|TPayload|
 signature|string|
+
+### VIDPRequestErrorCodes
+
+
+Property|Type|Description
+-|-|-
+"read_timeout"|"read_timeout"|A timeout occured when waiting to read data from the server.
+"connect_timeout"|"connect_timeout"|A timeout occurred when waiting to establish a connection to the server.
+"status_code_error"|"status_code_error"|The request returned a non 200 status code.
+
+### VIDPAccessTokenErrorCodes
+
+
+Property|Type|Description
+-|-|-
+"invalid_request"|"invalid_request"|Protocol error, such as a missing required parameter.
+"invalid_grant"|"invalid_grant"|The authorization code or PKCE code verifier is invalid or has expired.
+"unauthorized_client"|"unauthorized_client"|The authenticated client isn't authorized to use this authorization grant type.
+"invalid_client"|"invalid_client"|Client authentication failed.
+"unsupported_grant_type"|"unsupported_grant_type"|The authorization server does not support the authorization grant type.
+"invalid_resource"|"invalid_resource"|The target resource is invalid because it does not exist, Azure AD can't find it, or it's not correctly configured.
+"interaction_required"|"interaction_required"|The request requires user interaction. For example, an additional authentication step is required.
+"temporarily_unavailable"|"temporarily_unavailable"|The server is temporarily too busy to handle the request.
+
+### VIDPTokenValidationErrorCodes
+
+
+Property|Type|Description
+-|-|-
+"malfomed_token"|"malfomed_token"|The token is malformed.<br>It may not consist of three segments or may not be parseable by the `jsonwebptoken` library.
+"missing_header"|"missing_header"|The token is malformed. Its header is missing.
+"missing_payload"|"missing_payload"|The token is malformed. Its payload is missing.
+"missing_signature"|"missing_signature"|The token is malformed. Its signature
+"no_such_public_key"|"no_such_public_key"|The token requested a public key with an id that does not exist in the metadata endpoint.
+"verification_error"|"verification_error"|An error occured when verifying the token against nonce, clientId, issuer, tolerance or public key.
+"incorrect_hash"|"incorrect_hash"|The token did not match the expected hash
+
+### VIDPStrategyErrorCodes
+
+
+Property|Type|Description
+-|-|-
+"missing_required_setting"|"missing_required_setting"|A required setting was missing. See description for more information.
+"invalid_internal_state"|"invalid_internal_state"|The internal state of the system is not valid. This may occur when users peforms authentication too slowly<br>or if an attacker is attempting a replay attack.
+"verifier_error"|"verifier_error"|An error occured in the verifier function called once the authentication is completed.
+"unknown_error"|"unknown_error"|This error code occurs if the system was unable to determine the reason for the error.<br>Check the error details or innerError for more information.
+
+### VIDPRefreshTokenErrorCodes
+
+
+Property|Type|Description
+-|-|-
+"cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver.<br>See description for more details.
 
 <!-- /types -->
 
