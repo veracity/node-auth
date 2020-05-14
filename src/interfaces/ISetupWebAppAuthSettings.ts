@@ -3,6 +3,7 @@ import { VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { IRouterLike, IVIDPWebAppStrategySettings } from "."
 import { VIDPError } from "../errors"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
+import { ILoggerLike } from "./IloggerLike"
 
 export interface ISetupWebAppAuthSettings {
 	/**
@@ -64,4 +65,8 @@ export interface ISetupWebAppAuthSettings {
 	 * If not defined will pass the error on to the default error handler in the app or router.
 	 */
 	onLoginError?: (error: VIDPError, req: Request, res: Response, next: NextFunction) => void
+	/**
+	 * Optional provide your own logger
+	 */
+	logger?: ILoggerLike
 }

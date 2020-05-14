@@ -22,9 +22,11 @@ This library provides utilities that help with authentication against the Veraci
 - [Refresh token](#refresh-token)
 - [Logging out](#logging-out)
 - [Error handling](#error-handling)
+- [Logging](#logging)
 - [Data structures](#data-structures)
   * [IDefaultAuthConfig](#idefaultauthconfig)
   * [IFullAuthConfig](#ifullauthconfig)
+  * [ILoggerLike](#iloggerlike)
   * [IRouterLike](#irouterlike)
   * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
   * [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
@@ -86,7 +88,6 @@ app.get("/user", (req, res) => {
 })
 
 // Create an endpoint where we can refresh the services token.
-// By default this will refresh it when it has less than 5 minutes until it expires.
 app.get("/refresh", refreshTokenMiddleware, (req, res) => {
 	res.send("Refreshed token!")
 })
@@ -202,6 +203,35 @@ app.use((err, req, res, next) => {
 })
 ```
 
+## Logging
+You can pass in a custom logger when using `setupWebAppAuth`. Example:
+```javascript
+const express = require("express")
+const { MemoryStore } = require("express-session")
+const { setupWebAppAuth } = require("../../dist")
+const winston = require("winston")
+
+const app = express()
+
+setupWebAppAuth({
+	app,
+	strategy: {
+		clientId: "...",
+		clientSecret: "...",
+		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
+	},
+	session: {
+		secret: "...",
+		store: new MemoryStore()
+	},
+	logger: winston.createLogger({
+		transports: [
+			new winston.transports.Console(),
+		]
+	  })
+})
+```
+
 ## Data structures
 ⭐️
 
@@ -220,8 +250,6 @@ logLevel?|"error"|
 name|string|
 oidcConfig|Omit<IOIDCStrategyOption, "clientID" \| "redirectUrl">|
 policyName|string|
-destroySessionUrl|string|
-destroyADFSSessionUrl|string|
 tenantID|string|
 onLogout|(req: Request, res: Response, next: NextFunction) => void|
 onBeforeLogin|(req: Request, res: Response, next: NextFunction) => void|
@@ -236,6 +264,16 @@ Property|Type|Description
 -|-|-
 oidcConfig|IOIDCStrategyOption|
 session|IMakeSessionConfigObjectOptions|
+
+### ILoggerLike
+
+
+Property|Type|Description
+-|-|-
+info|(str: any) => void|
+warn|(str: any) => void|
+error|(str: any) => void|
+levels?|(str: any) => void|
 
 
 ### IRouterLike
@@ -263,6 +301,7 @@ onVerify?|VerifyOIDCFunctionWithReq|The verifier function passed to the strategy
 onLoginComplete?|(req: Request, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
 onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out.<br>The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
 onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect.<br>If not defined will pass the error on to the default error handler in the app or router.
+logger?|ILoggerLike|Optional provide your own logger
 
 ### IVIDPAccessTokenPayload
 *extends IVIDPJWTTokenPayloadCommonClaims*

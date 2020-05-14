@@ -1,3 +1,6 @@
+// This needs to be imported first to overwrite the "passport-azure-ad" logger
+import { CustomLogger } from "./logger"
+
 import bodyParser from "body-parser"
 import { NextFunction, Request, Response } from "express"
 import expressSession from "express-session"
@@ -39,7 +42,7 @@ const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res
 }
 
 const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISetupWebAppAuthSettings, "app">): IFullAuthConfig => {
-	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name} = endUserConfig
+	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name } = endUserConfig
 	const config = {
 		...defaultConfig,
 		oidcConfig: {
@@ -71,7 +74,9 @@ const validateConfig = (config: ISetupWebAppAuthSettings) => {
 
 export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	validateConfig(config)
-	const { app, ...rest } = config
+	const { app, logger: providedLogger, ...rest } = config
+
+	const logger = new CustomLogger().registerLogger(providedLogger)
 
 	const fullConfig = mergeConfig(authConfig, rest)
 	const sessionConfig = makeSessionConfigObject(fullConfig.session)
@@ -80,15 +85,16 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		onBeforeLogin,
 		onVerify,
 		onLoginComplete,
-		onLoginError
+		onLoginError,
+		onLogout
 	} = fullConfig
 
-	// log.debug("Configuring session")
+	logger.info("Configuring session")
 
 	// Set up session support for requests
 	app.use(expressSession(sessionConfig))
 
-	// log.debug("Setting up auth strategy")
+	logger.info("Setting up auth strategy")
 
 	// Create and configure the strategy instance that will perform authentication
 	const strategy = new VIDPWebAppStrategy(fullConfig.oidcConfig as any, onVerify)
@@ -101,7 +107,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	passport.serializeUser((user, done) => { done(null, user) })
 	passport.deserializeUser((passportSession, done) => { done(null, passportSession) })
 
-	// log.debug("Connecting passport to application")
+	logger.info("Connecting passport to application")
 
 	// Now that passport is configured we need to tell express to use it
 	app.use(passport.initialize()) // Register passport with our expressjs instance
@@ -131,17 +137,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	)
 
 	// Our logout route handles logging out of B2C and removing session information.
-	app.get(fullConfig.logoutPath, (req: Request, res: Response) => { // Overview step 8
-		// First we instruct the session manager (express-session) to destroy the session information for this user.
-		if (req.session) {
-			req.session.destroy(() => {
-				// Then we call the logout function placed on the req object by passport to sign out of Azure B2C
-				req.logout()
-				// Finally we redirect to Azure B2C to destroy the session information. This will route the user to the /logoutadfs route when done.
-				res.redirect(fullConfig.destroySessionUrl)
-			})
-		}
-	})
+	app.get(fullConfig.logoutPath, onLogout)
 
 	return {
 		refreshTokenMiddleware: createRefreshTokenMiddleware({

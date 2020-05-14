@@ -17,8 +17,6 @@ export interface IDefaultAuthConfig {
 	name: string
 	oidcConfig: Omit<IOIDCStrategyOption, "clientID" | "redirectUrl">
 	policyName: string
-	destroySessionUrl: string
-	destroyADFSSessionUrl: string
 	tenantID: string
 	onLogout: (req: Request, res: Response, next: NextFunction) => void
 	onBeforeLogin: (req: Request, res: Response, next: NextFunction) => void

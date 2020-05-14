@@ -1,6 +1,9 @@
 import { Request, Response } from "express"
 import { IDefaultAuthConfig } from '../interfaces'
 import { VERACITY_API_SCOPES, VERACITY_LOGOUT_URL, VERACITY_POLICY, VERACITY_TENANT_ID } from './../constants'
+import { CustomLogger } from "./logger"
+
+const logger = new CustomLogger()
 
 export const authConfig: IDefaultAuthConfig = {
 	loginPath: "/login",
@@ -31,26 +34,25 @@ export const authConfig: IDefaultAuthConfig = {
 	// We need this option to perform the login request properly.
 	policyName: VERACITY_POLICY,
 
-	// The url we must use to log out properly and also destroy any session cookies.
-	// We use the parameter 'post_logout_redirect_uri' to route users back to our application in order to finish the log out process on our end.
-	// A route matching this url is set up in start.js to handle the final steps of the sign out process.
-	destroySessionUrl: `https://login.microsoftonline.com/${VERACITY_TENANT_ID}/oauth2/v2.0/logout?p=${VERACITY_POLICY}&post_logout_redirect_uri=https://localhost:3000/logoutadfs`,
-
-	// In order to complete the sign-out process ADFS needs to clear its session data as well. That is done by visiting this url.
-	destroyADFSSessionUrl: "https://fsext1.dnv.com/adfs/ls/?wa=wsignout1.0",
-
 	onBeforeLogin: (req: any, res: any, next: any) => {next()},
 	onLoginComplete: (req: Request, res: Response) => {
 		res.redirect(req.query.returnTo || "/")
 	},
 	onLogout: (req: any, res: any, next: any) => {
-		req.logout()
-		res.redirect(VERACITY_LOGOUT_URL)
+		logger.info("Logging out user")
+		if (req.session) {
+			req.session.destroy(() => {
+				req.logout()
+				res.redirect(VERACITY_LOGOUT_URL)
+			})
+		}
 	},
 	onLoginError: (err: any, req: any, res: any, next: any) => {
+		logger.error("Error in onLoginError" + err.message)
 		next(err)
 	},
 	onVerify: (req, iss, sub, profile, jwtClaims, accessToken, refreshToken, params, done) => {
+		logger.info("Running onVerify function")
 		const { expires_in, expires_on } = params
 		const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
 		if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
