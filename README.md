@@ -246,7 +246,7 @@ Property|Type|Description
 loginPath|string|
 logoutPath|string|
 errorPath|string|
-logLevel?|"error"|
+logLevel|LogLevel|
 name|string|
 oidcConfig|Omit<IOIDCStrategyOption, "clientID" \| "redirectUrl">|
 policyName|string|
@@ -292,7 +292,7 @@ app|IRouterLike|The express application to configure or the router instance.
 errorPath?|string|Where to redirect user on error
 loginPath?|string|The path where login will be configured
 logoutPath?|string|The path where logout will be configured
-logLevel?<br>="error"|"error" \| "warn" | "info"|Logging level
+logLevel?<br>="error"|LogLevel|Logging level
 session|IMakeSessionConfigObjectOptions|Session configuration for express-session
 strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
 name?<br>="veracity-oidc"|string|Name of the passport strategy

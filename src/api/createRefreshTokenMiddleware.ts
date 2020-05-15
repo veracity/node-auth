@@ -16,7 +16,7 @@ const resolveRefreshToken = (req: Request) => {
 	}
 }
 
-interface IRefreshConfig {
+export interface IRefreshConfig {
 	tenantID: string
 	policyName: string
 	clientID: string
@@ -30,6 +30,7 @@ interface IRefreshConfig {
  */
 export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (req: Request, res: Response, next: NextFunction) => {
 	const refreshToken = resolveRefreshToken(req)
+	logger.info("Got refresh token from request")
 	const endpoint = `https://login.microsoftonline.com/${config.tenantID}/oauth2/v2.0/token?p=${config.policyName}`
 	const payload = {
 		client_id: config.clientID,
@@ -44,6 +45,7 @@ export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (r
 			method: "POST",
 			form: payload
 		})
+		logger.info("Successful request to get new access token from refresh_token")
 
 		const data = JSON.parse(response)
 
@@ -58,6 +60,7 @@ export const createRefreshTokenMiddleware = (config: IRefreshConfig) => async (r
 				refresh_token,
 				...additionalInfo
 			}
+			logger.info("Success updating tokens to user session")
 		} else {
 			logger.error("No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
 			throw new VIDPError("missing_token","No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")

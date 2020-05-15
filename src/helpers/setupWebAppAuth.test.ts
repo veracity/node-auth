@@ -131,3 +131,62 @@ describe("setupWebAppAuth", () => {
 			})
 	})
 })
+describe("user config", () => {
+	let userConfigAgent: SuperTest<Test>
+	const onBeforeLoginMock = jest.fn()
+	beforeAll(() => {
+		const app = express()
+		setupWebAppAuth({
+			app,
+			session: {
+				secret: "asdas241tedast3gqeadfadsfafd",
+				store: new MemoryStore()
+			},
+			strategy: {
+				clientId: refreshMiddlewareConfig.clientID,
+				clientSecret: refreshMiddlewareConfig.clientSecret,
+				replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
+			},
+			loginPath: "/auth/login",
+			logoutPath: "/auth/logout",
+			onBeforeLogin: (req, res, next) => {
+				// tslint:disable-next-line: no-unused-expression
+				new onBeforeLoginMock()
+				next()
+			}
+		})
+
+		userConfigAgent = request.agent(app, {})
+
+	})
+	it("uses provided login url", (done) => {
+		userConfigAgent
+			.get("/auth/login")
+			.expect(302, done)
+	})
+	it("returns 404 on default login url", (done) => {
+		userConfigAgent
+			.get('/login')
+			.expect(404, done)
+	})
+	it("uses provided logout url", (done) => {
+		userConfigAgent
+			.get("/auth/logout")
+			.expect(302, done)
+	})
+	it("return 404 on default logout url", (done) => {
+		userConfigAgent
+			.get("/logout")
+			.expect(404, done)
+	})
+	it("is running passed on onBeforeLogin", (done) => {
+		userConfigAgent
+			.get("/auth/login")
+			.expect(302, () => {
+				expect(onBeforeLoginMock.mock.calls.length).toBeGreaterThan(0)
+				done()
+			})
+	})
+})
+
+// TODO: test logger and onVerify, onLoginComplete, onLogout, onLoginError

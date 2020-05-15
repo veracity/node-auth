@@ -42,7 +42,7 @@ const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res
 }
 
 const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISetupWebAppAuthSettings, "app">): IFullAuthConfig => {
-	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name } = endUserConfig
+	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name, logLevel, loginPath, logoutPath } = endUserConfig
 	const config = {
 		...defaultConfig,
 		oidcConfig: {
@@ -55,13 +55,15 @@ const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISet
 		},
 		session: endUserConfig.session
 	}
-	if (endUserConfig.logLevel) config.oidcConfig.loggingLevel = endUserConfig.logLevel
+	config.oidcConfig.loggingLevel = logLevel || defaultConfig.logLevel
 	if (onBeforeLogin) config.onBeforeLogin = onBeforeLogin
 	if (onLoginComplete) config.onLoginComplete = onLoginComplete
 	if (onLoginError) config.onLoginError = onLoginError
 	if (onLogout) config.onLogout = onLogout
 	if (onVerify) config.onVerify = onVerify
 	if (name) config.name = name
+	if (loginPath) config.loginPath = loginPath
+	if (logoutPath) config.logoutPath = logoutPath
 	return config
 }
 
@@ -75,11 +77,10 @@ const validateConfig = (config: ISetupWebAppAuthSettings) => {
 export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	validateConfig(config)
 	const { app, logger: providedLogger, ...rest } = config
-
-	const logger = new CustomLogger().registerLogger(providedLogger)
-
 	const fullConfig = mergeConfig(authConfig, rest)
 	const sessionConfig = makeSessionConfigObject(fullConfig.session)
+
+	const logger = new CustomLogger(fullConfig.oidcConfig.loggingLevel).registerLogger(providedLogger)
 
 	const {
 		onBeforeLogin,

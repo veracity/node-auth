@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import { VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { IRouterLike, IVIDPWebAppStrategySettings } from "."
 import { VIDPError } from "../errors"
+import { LogLevel } from "../helpers/logger"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 import { ILoggerLike } from "./IloggerLike"
 
@@ -26,7 +27,7 @@ export interface ISetupWebAppAuthSettings {
 	 * Logging level
 	 * @default "error"
 	 */
-	logLevel?: "error" | "warn" | "info"
+	logLevel?: LogLevel
 	/**
 	 * Session configuration for express-session
 	 */

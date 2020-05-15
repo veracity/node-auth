@@ -5,7 +5,7 @@ const { MemoryStore } = require("express-session")
 const {
 	setupWebAppAuth,
 	generateCertificate
-} = require("@veracity/node-auth")
+} = require("../../dist")
 
 // Create our express instance
 const app = express()
@@ -14,14 +14,15 @@ const app = express()
 const { refreshTokenMiddleware } = setupWebAppAuth({
 	app,
 	strategy: { // Fill these in with values from your Application Credential
-		clientId: "", // your client id
-		clientSecret: "", // your client secret
+		clientId: "058474c5-1e84-48b1-9e8b-e8f9e0bbe275",
+		clientSecret: "w:AhRaBScFapwHFAI@tGxCvxhD76[/53",
 		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
 	},
 	session: {
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
 		store: new MemoryStore()
-	}
+	},
+	logLevel: "info"
 })
 
 // This endpoint will return our user data so we can inspect it.

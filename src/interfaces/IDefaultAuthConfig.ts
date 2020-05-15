@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { IOIDCStrategyOptionWithRequest, VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { VIDPError } from "../errors"
+import { LogLevel } from "../helpers/logger"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
 interface IOIDCStrategyOption extends Omit<IOIDCStrategyOptionWithRequest, "scope" | "clientSecret" | "passReqToCallback"> {
@@ -13,7 +14,7 @@ export interface IDefaultAuthConfig {
 	loginPath: string
 	logoutPath: string
 	errorPath: string
-	logLevel?: "error"
+	logLevel: LogLevel
 	name: string
 	oidcConfig: Omit<IOIDCStrategyOption, "clientID" | "redirectUrl">
 	policyName: string

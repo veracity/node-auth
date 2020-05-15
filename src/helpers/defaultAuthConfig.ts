@@ -10,6 +10,7 @@ export const authConfig: IDefaultAuthConfig = {
 	errorPath: "/error",
 	logoutPath: "/logout",
 	name: "veracity-oidc",
+	logLevel: "error",
 
 	// The options we must pass to OpenID Connect. See https://github.com/AzureAD/passport-azure-ad
 	oidcConfig: {
