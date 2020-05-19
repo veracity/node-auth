@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import { IDefaultAuthConfig } from '../interfaces'
-import { VERACITY_API_SCOPES, VERACITY_LOGOUT_URL, VERACITY_POLICY, VERACITY_TENANT_ID } from './../constants'
+import { VERACITY_API_SCOPES, VERACITY_LOGOUT_URL, VERACITY_METADATA_ENDPOINT, VERACITY_POLICY, VERACITY_TENANT_ID } from './../constants'
 import { CustomLogger } from "./logger"
 
 const logger = new CustomLogger()
@@ -14,7 +14,7 @@ export const authConfig: IDefaultAuthConfig = {
 
 	// The options we must pass to OpenID Connect. See https://github.com/AzureAD/passport-azure-ad
 	oidcConfig: {
-		identityMetadata: `https://login.microsoftonline.com/${VERACITY_TENANT_ID}/v2.0/.well-known/openid-configuration`,
+		identityMetadata: VERACITY_METADATA_ENDPOINT,
 
 		isB2C: true,
 		passReqToCallback: true,
