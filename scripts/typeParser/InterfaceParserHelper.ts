@@ -29,7 +29,7 @@ export class InterfaceParserHelper extends BaseParser {
 	}
 
 	public parse(): IInterfaceProperty[] {
-		let bank: Array<string | undefined> = []
+		let bank: (string | undefined)[] = []
 		let comment = ""
 		let identifierName = ""
 		let type = ""

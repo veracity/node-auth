@@ -37,7 +37,7 @@ export const authConfig: IDefaultAuthConfig = {
 
 	onBeforeLogin: (req: any, res: any, next: any) => {next()},
 	onLoginComplete: (req: Request, res: Response) => {
-		res.redirect(req.query.returnTo || "/")
+		res.redirect(typeof req.query.returnTo === "string" ? req.query.returnTo : "/")
 	},
 	onLogout: (req: any, res: any, next: any) => {
 		logger.info("Logging out user")
