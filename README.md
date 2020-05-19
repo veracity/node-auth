@@ -14,8 +14,6 @@ This library provides utilities that help with authentication against the Veraci
 - [Installation](#installation)
 - [Examples](#examples)
 - [Usage](#usage)
-  * [Usage with `setupWebAppAuth` helper](#usage-with-setupwebappauth-helper)
-  * [Usage with `VIDPWebAppStrategy`](#usage-with-vidpwebappstrategy)
 - [Passing state](#passing-state)
 - [Check if the user is logged in](#check-if-the-user-is-logged-in)
 - [Authentication process](#authentication-process)
@@ -55,9 +53,8 @@ Run `npm i @veracity/node-auth` or `yarn add @veracity/node-auth` to install. Ty
 See one of the [examples](./examples) to get started. 
 
 ## Usage
-You could either use the helper `setupWebAppAuth` that simplifies setup, or use the [`passport`](https://github.com/jaredhanson/passport) strategy `VIDPWebAppStrategy`.
+The helper `setupWebAppAuth` simplifies setting up authentication towards Veracity. If you're looking for an alternative, you can use [`passport`](https://github.com/jaredhanson/passport) in combination with [`passport-azure-ad`](https://github.com/AzureAD/passport-azure-ad). 
 
-### Usage with `setupWebAppAuth` helper
 ```javascript
 const express = require("express")
 const https = require("https")
@@ -105,21 +102,6 @@ server.on("error", (error) => { // If an error occurs halt the application
 server.listen(3000, () => { // Begin listening for connections
 	console.log("Listening for connections on port 3000")
 })
-```
-
-### Usage with `VIDPWebAppStrategy`
-You can use the `VIDPWebAppStrategy` directly just like a normal [`passport`](https://github.com/jaredhanson/passport) strategy: 
-```javascript
-import { VIDPWebAppStrategy } from "@veracity/node-auth"
-import passport from "passport"
-// ... your code here ...
-const config = {/* ... your config ... */}
-const onVerify = (req, profile, done) => {/* ... your verify implementation ... */}
-// Create and configure the strategy instance that will perform authentication
-const strategy = new VIDPWebAppStrategy(config, onVerify)
-
-// Register the strategy with passport
-passport.use("veracity-oidc", strategy)
 ```
 
 ## Passing state
@@ -339,7 +321,8 @@ Property|Type|Description
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
 clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to
+ slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
