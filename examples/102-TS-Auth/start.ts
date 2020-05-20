@@ -37,7 +37,7 @@ app.get("/user", (req, res) => {
 
 // Create an endpoint where we can refresh the services token.
 // By default this will refresh it when it has less than 5 minutes until it expires.
-app.get("/refresh", refreshTokenMiddleware, (req, res) => {
+app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
 	res.send({
 		updated: Date.now(),
 		user: req.user

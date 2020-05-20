@@ -56,8 +56,14 @@ export const authConfig: IDefaultAuthConfig = {
 		logger.info("Running onVerify function")
 		const { expires_in, expires_on } = params
 		const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
-		if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
+		if (expires_in) additionalInfo.accessTokenExpires = Number(expires_in)
 		if (expires_on) additionalInfo.accessTokenLifetime = Number(expires_on)
+
+		if (!accessToken || !refreshToken) {
+			logger.error("onVerify: Missing " + accessToken ? "access" : "refresh" + " token")
+			return done(new Error("Missing " + accessToken ? "access" : "refresh" + " token"), null)
+		}
+
 		const user = { // Extract information from the data returned from B2C/ADFS
 			name: jwtClaims.name,
 			id: jwtClaims.oid,
@@ -73,7 +79,7 @@ export const authConfig: IDefaultAuthConfig = {
 			}
 		}
 
-		done(null, user) // Tell passport that no error occured (null) and which user object to store with the session.
+		done(null, user) // Tell passport that no error occurred (null) and which user object to store with the session.
 	}
 }
 

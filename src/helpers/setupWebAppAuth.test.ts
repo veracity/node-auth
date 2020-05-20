@@ -6,7 +6,7 @@ import { setupWebAppAuth } from './setupWebAppAuth'
 
 const refreshMockFn = jest.fn()
 jest.mock("../api/createRefreshTokenMiddleware", () => ({
-	createRefreshTokenMiddleware: (config: any) => {
+	createRefreshTokenMiddleware: (config: any) => () => {
 		// tslint:disable-next-line: no-unused-expression
 		new refreshMockFn(config)
 		return (req: Request, res: Response, next: NextFunction) => {
@@ -48,7 +48,7 @@ describe("setupWebAppAuth", () => {
 			}
 			res.status(401).send("Unauthorized")
 		})
-		app.get("/refresh", refreshTokenMiddleware, (req, res, next) => {
+		app.get("/refresh", refreshTokenMiddleware(), (req, res, next) => {
 			res.send("OK")
 		})
 

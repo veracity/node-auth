@@ -85,7 +85,7 @@ app.get("/user", (req, res) => {
 })
 
 // Create an endpoint where we can refresh the services token.
-app.get("/refresh", refreshTokenMiddleware, (req, res) => {
+app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
 	res.send("Refreshed token!")
 })
 
@@ -132,7 +132,7 @@ Call the method `req.isAuthenticated()` to see if the user is logged in. Returns
 ## Authentication process
 The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow).
 
-This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build cool applications.
+This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build your application.
 
 ## Refresh token
 The library also gives you a way to refresh the token. The method is returned to you when calling the `setupWebAppAuth` method:
@@ -141,14 +141,26 @@ const { refreshTokenMiddleware } = setupWebAppAuth(/* ... config ... */)
 ``` 
 Later, use the `refreshTokenMiddleware` method like this:
 ```javascript
-app.get("/refresh", refreshTokenMiddleware, (req, res, next) => {
+app.get("/refresh", refreshTokenMiddleware(), (req, res, next) => {
 	res.send("OK, token refreshed")
 })
 ```
-If you provide your own `onVerify` function to `setupWebAppAuth` and don't place the refresh token in `req..user.tokens.services.refresh_token`, you have to create your own function for refreshing tokens.
+If you provide your own `onVerify` function to `setupWebAppAuth` and want to store the tokens in some specific location, you can pass in the optional arguments for resolving refresh token and storing the access token like so: 
+```javascript
+const resolveRefreshToken = (req) => req.user.customTokenPlacement.refreshToken
+const storeRefreshedTokens = (refreshResponse, req) => {
+	req.user.customTokenPlacement = {
+		accessToken: refreshResponse.access_token,
+		refreshToken: refreshResponse.refresh_token
+	}
+}
+app.get("/refresh", refreshTokenMiddleware(resolveRefreshToken, storeRefreshedTokens), (req, res, next) => {
+	res.send("OK, token refreshed")
+})
+```
 
 ## Logging out
-Logging out users is a relatively simple process. Your application is storing session information (user data including access tokens) within some kind of session storage. This must be removed. Then you need to redirect users to the sign out page on Veracity to centrally log them out. This last step is required by Veracity to adhere to security best-practices.
+Logging out users is a relatively simple process. Your application is storing session information (user data including access tokens) within some kind of session storage. This must be removed. Then you need to redirect users to the sign out page on Veracity to centrally log them out. This last step is required by Veracity to adhere to security best-practices. The logout url is set up bt default to "/logout", but you can change it by passing `logoutPath` in the configuration object of `setupWebAppAuth`.
 
 The URL on Veracity where you should direct users logging out is stored as a constant in this library:
 ```javascript

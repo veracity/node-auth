@@ -7,9 +7,10 @@ import expressSession from "express-session"
 import passport from "passport"
 import { createRefreshTokenMiddleware } from "../api/createRefreshTokenMiddleware"
 import { VIDPWebAppStrategy } from "../api/VIDPWebAppStrategy"
-import { ISetupWebAppAuthSettings  } from '../interfaces'
+import { ISetupWebAppAuthSettings  } from "../interfaces"
+import { mergeConfig, validateConfig } from "../utils/configHelpers"
 import { getUrlPath } from "../utils/getUrlPath"
-import { IDefaultAuthConfig, IFullAuthConfig } from './../interfaces/IDefaultAuthConfig'
+import { safeStringify } from "../utils/safeStringify"
 import authConfig from "./defaultAuthConfig"
 import { makeSessionConfigObject } from "./makeSessionConfigObject"
 
@@ -23,7 +24,7 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 
 const stateString = (state?: string | object) => {
 	if (typeof state === "string") return state
-	if (typeof state === "object") return JSON.stringify(state)
+	if (typeof state === "object") return safeStringify(state)
 	return
 }
 
@@ -39,39 +40,6 @@ const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res
 		req.veracityAuthState = req.body.state
 	}
 	next()
-}
-
-const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISetupWebAppAuthSettings, "app">): IFullAuthConfig => {
-	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name, logLevel, loginPath, logoutPath } = endUserConfig
-	const config = {
-		...defaultConfig,
-		oidcConfig: {
-			...defaultConfig.oidcConfig,
-			clientID: endUserConfig.strategy.clientId,
-			clientSecret: endUserConfig.strategy.clientSecret,
-			redirectUrl: endUserConfig.strategy.replyUrl,
-			scope: [...(defaultConfig.oidcConfig.scope || []), ...(endUserConfig.strategy.apiScopes || [])],
-			identityMetadata: endUserConfig.strategy.metadataURL ? endUserConfig.strategy.metadataURL : defaultConfig.oidcConfig.identityMetadata
-		},
-		session: endUserConfig.session
-	}
-	config.oidcConfig.loggingLevel = logLevel || defaultConfig.logLevel
-	if (onBeforeLogin) config.onBeforeLogin = onBeforeLogin
-	if (onLoginComplete) config.onLoginComplete = onLoginComplete
-	if (onLoginError) config.onLoginError = onLoginError
-	if (onLogout) config.onLogout = onLogout
-	if (onVerify) config.onVerify = onVerify
-	if (name) config.name = name
-	if (loginPath) config.loginPath = loginPath
-	if (logoutPath) config.logoutPath = logoutPath
-	return config
-}
-
-const validateConfig = (config: ISetupWebAppAuthSettings) => {
-	if (!config.app) throw new Error("'app' is required in config.")
-	if (!config.strategy) throw new Error("'strategy' is required in config.")
-	if (!config.strategy.clientId) throw new Error("'clientId' is required in strategy config.")
-	if (!config.strategy.replyUrl) throw new Error("'replyUrl' is required in strategy config.")
 }
 
 export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {

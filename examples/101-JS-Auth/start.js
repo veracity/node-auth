@@ -18,7 +18,7 @@ const { refreshTokenMiddleware } = setupWebAppAuth({
 		clientSecret: "",
 		replyUrl: "",
 	},
-	session: {
+	session: {	
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
 		store: new MemoryStore() // Use MemoryStore only for local development
 	},
@@ -36,7 +36,7 @@ app.get("/user", (req, res) => {
 
 // Create an endpoint where we can refresh the services token.
 // By default this will refresh it when it has less than 5 minutes until it expires.
-app.get("/refresh", refreshTokenMiddleware, (req, res) => {
+app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
 	res.send("Refreshed token!")
 })
 
