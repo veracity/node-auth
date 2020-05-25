@@ -42,6 +42,11 @@ export interface ISetupWebAppAuthSettings {
 	 */
 	name?: string
 	/**
+	 * @default "B2C_1A_SignInWithADFSIdp"
+	 * Policy to use when logging in.
+	 */
+	policyName?: string
+	/**
 	 * Provide a function that executes before the login process starts.
 	 * It executes as a middleware so remember to call next() when you are done.
 	 */

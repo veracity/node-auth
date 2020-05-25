@@ -17,10 +17,10 @@ const resolveRefreshToken = (req: Request): string => {
 }
 
 export interface IRefreshConfig {
-	tenantID: string
 	policyName: string
 	clientID: string
 	clientSecret?: string
+	identityMetadata: string
 	scope?: string
 }
 
@@ -43,7 +43,7 @@ export interface IRefreshResponse {
  * Middleware for getting new access token from refresh token
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/authorization-code-flow#4-refresh-the-token
  */
-export const createRefreshTokenMiddleware = (config: IRefreshConfig) => (
+export const createRefreshTokenMiddleware = ({ clientID, clientSecret, identityMetadata, scope, policyName }: IRefreshConfig) => (
 	resolverFn?: (req: Request) => string,
 	tokenPlacement?: (refreshResponse: Partial<IRefreshResponse>, req: Request, res: Response, next: NextFunction) => void
 ) => async (req: Request, res: Response, next: NextFunction) => {
@@ -58,16 +58,21 @@ export const createRefreshTokenMiddleware = (config: IRefreshConfig) => (
 			return next(new Error("No refresh token received"))
 		}
 		logger.info("Got refresh token from " + (resolverFn ? "passed in resolverFn" : "request"))
-		const endpoint = `https://login.microsoftonline.com/${config.tenantID}/oauth2/v2.0/token?p=${config.policyName}`
+		// const endpoint = `https://login.microsoftonline.com/${tenantID}/oauth2/v2.0/token?p=${policyName}`
+
+		const metadataString = await request(identityMetadata)
+		const metadata = JSON.parse(metadataString)
+		const tokenEndpointUrl = new URL(metadata.token_endpoint)
+		tokenEndpointUrl.searchParams.append("p", policyName)
 		const payload = {
-			client_id: config.clientID,
-			client_secret: config.clientSecret,
+			client_id: clientID,
+			client_secret: clientSecret,
 			grant_type: "refresh_token",
-			scope: "offline_access " + config.scope,
+			scope: "offline_access " + scope,
 			refresh_token: refreshToken
 		}
 
-		const response = await request(endpoint, {
+		const response = await request(tokenEndpointUrl.toString(), {
 			method: "POST",
 			form: payload
 		})

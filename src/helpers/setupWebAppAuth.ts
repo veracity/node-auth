@@ -111,9 +111,9 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	return {
 		refreshTokenMiddleware: createRefreshTokenMiddleware({
 			clientID: fullConfig.oidcConfig.clientID,
-			tenantID: fullConfig.tenantID,
 			policyName: fullConfig.policyName,
 			clientSecret: fullConfig.oidcConfig.clientSecret,
+			identityMetadata: fullConfig.oidcConfig.identityMetadata,
 			scope: fullConfig.oidcConfig.scope && typeof fullConfig.oidcConfig.scope !== "string" ? fullConfig.oidcConfig.scope.join(" ") : fullConfig.oidcConfig.scope
 		})
 	}

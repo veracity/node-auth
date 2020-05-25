@@ -290,6 +290,7 @@ logLevel?<br>="error"|LogLevel|Logging level
 session|IMakeSessionConfigObjectOptions|Session configuration for express-session
 strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
 name?<br>="veracity-oidc"|string|Name of the passport strategy
+policyName?<br>="B2C_1A_SignInWithADFSIdp"|string|Policy to use when logging in.
 onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
 onVerify?|VerifyOIDCFunctionWithReq|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
 onLoginComplete?|(req: Request, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
@@ -333,8 +334,7 @@ Property|Type|Description
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
 clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to
- slightly improve performance.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
