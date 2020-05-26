@@ -1,7 +1,8 @@
+import { VERACITY_METADATA_ENDPOINT } from "../constants"
 import { createRefreshTokenMiddleware, IRefreshConfig } from './createRefreshTokenMiddleware'
 
 const config: IRefreshConfig = {
-	tenantID: "asasdasd",
+	identityMetadata: VERACITY_METADATA_ENDPOINT,
 	policyName: "some_aname",
 	clientID: "asdasdas12432a",
 	clientSecret: "5adsadsa",

@@ -1,8 +1,8 @@
 import express, { NextFunction, Request, Response } from "express"
 import { MemoryStore } from "express-session"
 import request, { SuperTest, Test } from "supertest"
-import { VERACITY_POLICY, VERACITY_TENANT_ID } from './../constants'
-import { setupWebAppAuth } from './setupWebAppAuth'
+import { VERACITY_METADATA_ENDPOINT, VERACITY_POLICY } from "../constants"
+import { setupWebAppAuth } from "./setupWebAppAuth"
 
 const refreshMockFn = jest.fn()
 jest.mock("../api/createRefreshTokenMiddleware", () => ({
@@ -20,7 +20,7 @@ jest.mock("../api/createRefreshTokenMiddleware", () => ({
 let agent: SuperTest<Test>
 const refreshMiddlewareConfig = {
 	clientID: 'tsdf3245t-sdf32df-234rdfsdf-234fs-243asdasd',
-	tenantID: VERACITY_TENANT_ID,
+	identityMetadata: VERACITY_METADATA_ENDPOINT,
 	policyName: VERACITY_POLICY,
 	clientSecret: 'w:::1243ewads:::asfasd324',
 	scope: 'openid offline_access https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation'

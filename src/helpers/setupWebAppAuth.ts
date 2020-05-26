@@ -22,22 +22,18 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 	next()
 }
 
-const stateString = (state?: string | object) => {
-	if (typeof state === "string") return state
-	if (typeof state === "object") return safeStringify(state)
-	return
-}
-
 const authenticator = (name: string, errorPath: string) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
 	return passport.authenticate(name, {
-		customState: stateString(req.veracityAuthState),
+		customState: safeStringify({authState: req.veracityAuthState, query: req.query}),
 		failureRedirect: errorPath // Where to route the user if the authentication fails
 	} as any)(req, res, next)
 }
 
 const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res: Response, next: NextFunction) => {
 	if (req.body && req.body.state) {
-		req.veracityAuthState = req.body.state
+		const { authState, query } = JSON.parse(req.body.state)
+		req.veracityAuthState = authState
+		req.query = query || req.query
 	}
 	next()
 }
