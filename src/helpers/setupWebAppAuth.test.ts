@@ -121,6 +121,9 @@ describe("setupWebAppAuth", () => {
 			.expect(404, done)
 	})
 	it("calls createRefreshTokenMiddleware() with correct config and refreshTokenMiddleware() when added", (done) => {
+		// needed because pasport-azure-ad adds some query string parameters to the URL
+		const idmd = refreshMockFn.mock.calls[0][0].identityMetadata
+		refreshMockFn.mock.calls[0][0].identityMetadata = idmd.includes("?") ? idmd.split("?")[0] : idmd
 		expect(refreshMockFn.mock.calls[0][0]).toStrictEqual(refreshMiddlewareConfig)
 		agent
 			.get("/refresh")

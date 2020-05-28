@@ -40,12 +40,18 @@ export const authConfig: IDefaultAuthConfig = {
 		res.redirect(typeof req.query.returnTo === "string" ? req.query.returnTo : "/")
 	},
 	onLogout: (req: any, res: any, next: any) => {
-		logger.info("Logging out user")
+		const logout = () => {
+			req.logout()
+			res.redirect(VERACITY_LOGOUT_URL)
+		}
 		if (req.session) {
 			req.session.destroy(() => {
-				req.logout()
-				res.redirect(VERACITY_LOGOUT_URL)
+				logger.info("Logging out user and destroying req.session")
+				logout()
 			})
+		} else {
+			logger.info("No req.session found, logging out user")
+			logout()
 		}
 	},
 	onLoginError: (err: any, req: any, res: any, next: any) => {

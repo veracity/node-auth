@@ -20,7 +20,8 @@ const req = {
 const res: any = ""
 jest.mock("./request", () => jest.fn().mockResolvedValue(JSON.stringify({
 	refresh_token: "asdasdasdsadsadasdsada",
-	access_token: "atgafuwtehkdas"
+	access_token: "atgafuwtehkdas",
+	token_endpoint: VERACITY_METADATA_ENDPOINT
 })))
 describe("createRefreshTokenMiddleware", () => {
 	it("it does call next()", async () => {
