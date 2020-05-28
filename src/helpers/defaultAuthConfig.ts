@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
-import { IDefaultAuthConfig } from '../interfaces'
-import { VERACITY_API_SCOPES, VERACITY_LOGOUT_URL, VERACITY_METADATA_ENDPOINT, VERACITY_POLICY, VERACITY_TENANT_ID } from './../constants'
+import { VERACITY_API_SCOPES, VERACITY_LOGOUT_URL, VERACITY_METADATA_ENDPOINT, VERACITY_POLICY, VERACITY_TENANT_ID } from "../constants"
+import { IDefaultAuthConfig } from "../interfaces"
 import { CustomLogger } from "./logger"
 
 const logger = new CustomLogger()
@@ -39,20 +39,10 @@ export const authConfig: IDefaultAuthConfig = {
 	onLoginComplete: (req: Request, res: Response) => {
 		res.redirect(typeof req.query.returnTo === "string" ? req.query.returnTo : "/")
 	},
-	onLogout: (req: any, res: any, next: any) => {
-		const logout = () => {
-			req.logout()
-			res.redirect(VERACITY_LOGOUT_URL)
-		}
-		if (req.session) {
-			req.session.destroy(() => {
-				logger.info("Logging out user and destroying req.session")
-				logout()
-			})
-		} else {
-			logger.info("No req.session found, logging out user")
-			logout()
-		}
+	onLogout: (req: any, res: any) => {
+		logger.info("Logging out user")
+		req.logout()
+		res.redirect(VERACITY_LOGOUT_URL)
 	},
 	onLoginError: (err: any, req: any, res: any, next: any) => {
 		logger.error("Error in onLoginError" + err.message)
