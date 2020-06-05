@@ -103,6 +103,10 @@ server.listen(3000, () => { // Begin listening for connections
 	console.log("Listening for connections on port 3000")
 })
 ```
+`setupWebAppAuth` register the following default routes: 
+* `/login`: Path used to initialize the login process
+* `/logout`: Path used to log out the user and delete session data
+* `/error`: Where the user is redirected if there are errors in the login process
 
 ## Passing state
 Sometimes it is useful to be able to pass data from before the login begins all the way through the authentication process until control is returned back to your code. This library supports this in two ways for web and native applications (the bearer token validation strategy does not support this):
@@ -334,7 +338,8 @@ Property|Type|Description
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
 clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to
+ slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader

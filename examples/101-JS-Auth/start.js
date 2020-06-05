@@ -37,7 +37,11 @@ app.get("/user", (req, res) => {
 // Create an endpoint where we can refresh the services token.
 // By default this will refresh it when it has less than 5 minutes until it expires.
 app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
-	res.send("Refreshed token!")
+	console.log("Refreshed token")
+	res.send({
+		updated: Date.now(),
+		user: req.user
+	})
 })
 
 // Serve static content from the public folder so we can display the index.html page
