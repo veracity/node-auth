@@ -1,4 +1,9 @@
 # Veracity Authentication library for NodeJS
+[![npm version](https://img.shields.io/npm/v/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth "View this project on npm")
+[![package dependencies](https://img.shields.io/librariesio/release/npm/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth "View this project on npm")
+[![Issues](https://img.shields.io/github/issues/veracity/node-auth.svg)]( https://github.com/veracity/node-auth/issues )
+[![Downloads](https://img.shields.io/npm/dw/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth)
+
 This library provides utilities that help with authentication against the Veracity Identity Provider. It's based on the robust libraries [`passport`](https://github.com/jaredhanson/passport) and the strategy [`passport-azure-ad`](https://github.com/AzureAD/passport-azure-ad).
 
 ## Features
