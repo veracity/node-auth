@@ -23,13 +23,13 @@
   },
   "homepage": "https://developer.veracity.com",
   "devDependencies": {
-    "@types/express": "^4.17.2",
+    "@types/express": "^4.17.7",
     "@types/express-session": "^1.15.16",
-    "ts-node": "^8.4.1",
-    "typescript": "^3.6.3"
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@veracity/node-auth": "^3.0.0",
+    "@veracity/node-auth": "3.0.0-rc1",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
