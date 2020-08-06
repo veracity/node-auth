@@ -267,8 +267,8 @@ Property|Type|Description
 azp|string|
 userId|string|The users unique ID within Veracity.
 dnvglAccountName|string|The account name for the user.
-myDnvglGuid⬇|string|The old id for the user.
-oid|string|An object id within the Veracity IDP. Do not use this for user identification @see userId
+myDnvglGuid⬇|string|**Deprecated:**  - The old id for the user.
+oid|string|An object id within the Veracity IDP. Do not use this for user identification<br>@see userId
 upn|string|
 scp|string|
 
@@ -313,8 +313,8 @@ acr|string|
 auth_time|number|
 userId|string|The unique Veracity ID of the user.
 dnvglAccountName|string|
-myDnvglGuid⬇|string|Legacy Veracity ID of the user. Use userId claim instead.
-oid|string|The object id within the Veracity IDP. Do not use this for user identification as it is not propagated to other Veracity services.
+myDnvglGuid⬇|string|**Deprecated:**  - Legacy Veracity ID of the user. Use userId claim instead.
+oid|string|The object id within the Veracity IDP.<br>Do not use this for user identification as it is not propagated to other Veracity services.
 upn|string|
 
 ### IVIDPIDTokenData
@@ -338,10 +338,10 @@ accessTokens|{[apiScope: string]: IVIDPAccessTokenData}|Any access tokens reciev
 Property|Type|Description
 -|-|-
 clientId|string|The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
-clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub. Required for web applications, but not for native applications.
+clientSecret?|string|The client secret from the Application Credentials you created in the Veracity for Developers Provider Hub.<br>Required for web applications, but not for native applications.
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
-apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope. If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
-metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found. Defaults to the constant VERACITY_METADATA_ENDPOINT.
+apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
+metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
 
 ### IVIDPJWTTokenHeader
 

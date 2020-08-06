@@ -23,7 +23,7 @@ export const setupWebAppAuth = <TUser = any>(
 		onBeforeLogin = (req: any, res: any, next: any) => {next()},
 		onVerify = (data: any, req: any, done: any) => {done(null, data)},
 		onLoginComplete = (req: Request, res: Response) => {
-			res.redirect(req.query.returnTo || "/")
+			res.redirect(req.query.returnTo as string || "/")
 		},
 		onLogout = (req: any, res: any, next: any) => {
 			req.logout()
