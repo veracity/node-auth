@@ -1,6 +1,6 @@
 {
   "name": "@veracity/node-auth",
-  "version": "3.0.0-rc3",
+  "version": "3.0.0-rc4",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
     "build:copy-files": "ts-node -T scripts/copy-files.ts",
@@ -8,8 +8,10 @@
     "build:toc": "markdown-toc -i README.md",
     "build:tsc": "rimraf dist && tsc --build tsconfig.json",
     "build": "npm run build:tsc && npm run build:types && npm run build:toc && npm run build:copy-files",
-    "test": "jest",
-    "test:watch": "jest --watch"
+	"test": "jest",
+	"lint:lockfile": "lockfile-lint --type npm --path ./package-lock.json --validate-https --validate-integrity --validate-checksum --allowed-hosts registry.npmjs.org",
+	"test:watch": "jest --watch",
+	"lint": "npm run lint:lockfile"
   },
   "repository": {
     "type": "git",
@@ -31,6 +33,7 @@
   "homepage": "https://developer.veracity.com",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "lockfile-lint": "^4.3.7",
     "lodash.omit": "^4.5.0",
     "passport-azure-ad": "^4.2.1",
     "request": "^2.88.2",
