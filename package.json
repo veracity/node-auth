@@ -1,6 +1,6 @@
 {
   "name": "@veracity/node-auth",
-  "version": "3.0.0-rc4",
+  "version": "3.0.0-rc5",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
     "build:copy-files": "ts-node -T scripts/copy-files.ts",
@@ -8,10 +8,10 @@
     "build:toc": "markdown-toc -i README.md",
     "build:tsc": "rimraf dist && tsc --build tsconfig.json",
     "build": "npm run build:tsc && npm run build:types && npm run build:toc && npm run build:copy-files",
-	"test": "jest",
-	"lint:lockfile": "lockfile-lint --type npm --path ./package-lock.json --validate-https --validate-integrity --validate-checksum --allowed-hosts registry.npmjs.org",
-	"test:watch": "jest --watch",
-	"lint": "npm run lint:lockfile"
+    "test": "jest",
+    "lint:lockfile": "lockfile-lint --type npm --path ./package-lock.json --validate-https --validate-integrity --validate-checksum --allowed-hosts registry.npmjs.org",
+    "test:watch": "jest --watch",
+    "lint": "npm run lint:lockfile"
   },
   "repository": {
     "type": "git",
@@ -65,7 +65,7 @@
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
-    "node-forge": "^0.9.1",
+    "node-forge": "^0.10.0",
     "passport": "^0.4.0"
   },
   "jest": {

@@ -1,7 +1,7 @@
 import { IDefaultAuthConfig, IFullAuthConfig, ISetupWebAppAuthSettings } from "../interfaces"
 
 export const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Omit<ISetupWebAppAuthSettings, "app">): IFullAuthConfig => {
-	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name, logLevel, loginPath, logoutPath, policyName } = endUserConfig
+	const { onBeforeLogin, onLoginComplete, onLoginError, onLogout, onVerify, name, logLevel, loginPath, logoutPath, policyName, errorPath } = endUserConfig
 	const config = {
 		...defaultConfig,
 		oidcConfig: {
@@ -23,6 +23,7 @@ export const mergeConfig = (defaultConfig: IDefaultAuthConfig, endUserConfig: Om
 	if (name) config.name = name
 	if (loginPath) config.loginPath = loginPath
 	if (logoutPath) config.logoutPath = logoutPath
+	if (errorPath) config.errorPath = errorPath
 	if (policyName) config.policyName = policyName
 	return config
 }
