@@ -1,6 +1,6 @@
 {
   "name": "@veracity/node-auth",
-  "version": "3.0.0-rc5",
+  "version": "3.0.0-rc6",
   "description": "A library for authenticating with Veracity and retrieving one or more access tokens for communicating with APIs.",
   "scripts": {
     "build:copy-files": "ts-node -T scripts/copy-files.ts",
@@ -35,7 +35,7 @@
     "body-parser": "^1.19.0",
     "lockfile-lint": "^4.3.7",
     "lodash.omit": "^4.5.0",
-    "passport-azure-ad": "^4.2.1",
+    "passport-azure-ad": "^4.3.0",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9"
   },
