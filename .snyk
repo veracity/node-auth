@@ -1,4 +1,9 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
 version: v1.14.1
-ignore: {}
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JS-LODASH-590103:
+    - request-promise-native > request-promise-core > lodash:
+        reason: Snyk Patch not working
+        expires: '2020-10-17T08:53:53.832Z'
 patch: {}
