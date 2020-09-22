@@ -44,10 +44,6 @@ export const authConfig: IDefaultAuthConfig = {
 		req.logout()
 		res.redirect(VERACITY_LOGOUT_URL)
 	},
-	onLoginError: (err: any, req: any, res: any, next: any) => {
-		logger.error("Error in onLoginError" + err.message)
-		next(err)
-	},
 	onVerify: (req, iss, sub, profile, jwtClaims, accessToken, refreshToken, params, done) => {
 		logger.info("Running onVerify function")
 		const { expires_in, expires_on } = params

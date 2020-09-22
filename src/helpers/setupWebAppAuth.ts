@@ -50,7 +50,6 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		onBeforeLogin,
 		onVerify,
 		onLoginComplete,
-		onLoginError,
 		onLogout
 	} = fullConfig
 
@@ -97,8 +96,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		bodyParser.urlencoded({ extended: true }),
 		authenticator(fullConfig.name, fullConfig.errorPath),
 		ensureVeracityAuthState,
-		onLoginComplete,
-		onLoginError
+		onLoginComplete
 	)
 
 	// Our logout route handles logging out of B2C and removing session information.

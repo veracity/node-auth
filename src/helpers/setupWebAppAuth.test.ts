@@ -192,4 +192,4 @@ describe("user config", () => {
 	})
 })
 
-// TODO: test logger and onVerify, onLoginComplete, onLogout, onLoginError
+// TODO: test logger and onVerify, onLoginComplete, onLogout

@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express"
 import { IOIDCStrategyOptionWithRequest, VerifyOIDCFunctionWithReq } from "passport-azure-ad"
-import { VIDPError } from "../errors"
 import { LogLevel } from "../helpers/logger"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
 
@@ -23,7 +22,6 @@ export interface IDefaultAuthConfig {
 	onBeforeLogin: (req: Request, res: Response, next: NextFunction) => void
 	onVerify: VerifyOIDCFunctionWithReq
 	onLoginComplete: (req: Request, res: Response, next: NextFunction) => void
-	onLoginError: (err: VIDPError, req: Request, res: Response, next: NextFunction) => void
 }
 
 export interface IFullAuthConfig extends Omit<IDefaultAuthConfig, "oidcConfig"> {
