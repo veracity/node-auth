@@ -3,10 +3,7 @@ version: v1.14.1
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   SNYK-JS-LODASH-590103:
-    - passport-azure-ad > lodash:
-        reason: Snyk Patch not working
-        expires: '2020-10-16T12:27:30.761Z'
-    - request-promise-native > request-promise-core > lodash:
-        reason: Snyk Patch not working
-        expires: '2020-10-16T12:27:30.761Z'
+    - '*':
+        reason: None Given
+        expires: 2021-01-20T10:13:33.867Z
 patch: {}
