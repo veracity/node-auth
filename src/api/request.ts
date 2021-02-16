@@ -1,6 +1,5 @@
 // tslint:disable: max-classes-per-file
-import { CoreOptions } from "request"
-import requestPromise from "request-promise-native"
+import axios, { AxiosRequestConfig } from "axios"
 import { VIDPError, VIDPErrorSources } from "../errors"
 import { VIDPRequestErrorCodes } from './../interfaces/VIDPErrorCode'
 
@@ -15,19 +14,16 @@ export class RequestReadTimeoutError extends Error {
 	}
 }
 
-const defaultOptions: CoreOptions = {
-	timeout: 10*1000 // in ms
-}
 /**
  * Wrapper for request that adds default options. All other options are the same
  * @param url
  * @param options
  */
-export const request = async <TResponse = any>(url: string, options: CoreOptions = {}) => {
-	const allOptions = { url, ...options, ...defaultOptions }
+export const request = async <T>(options: AxiosRequestConfig) => {
+	if (!options.timeout) options.timeout = 10*1000 // in ms
 	try {
-		const response = await requestPromise(allOptions)
-		return response as TResponse
+		const response = await axios(options)
+		return response.data as T
 	} catch (error) {
 		if (error.code === "ETIMEDOUT") {
 			throw new VIDPError(
