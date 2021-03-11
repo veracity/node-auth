@@ -22,14 +22,15 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 	next()
 }
 
-interface IAuthenticatorOptions extends IExtraAuthenticateOptions {
+interface IAuthenticatorOptions {
 	name: string
 	errorPath: string
+	additionalAuthenticateOptions?: IExtraAuthenticateOptions
 }
 
-const authenticator = ({ name, errorPath, extraAuthReqQueryParams }: IAuthenticatorOptions) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
+const authenticator = ({ name, errorPath, additionalAuthenticateOptions = {} }: IAuthenticatorOptions) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
 	return passport.authenticate(name, {
-		extraAuthReqQueryParams,
+		...additionalAuthenticateOptions,
 		customState: safeStringify({authState: req.veracityAuthState, query: req.query}),
 		failureRedirect: errorPath // Where to route the user if the authentication fails
 	} as any)(req, res, next)
@@ -56,7 +57,8 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		onBeforeLogin,
 		onVerify,
 		onLoginComplete,
-		onLogout
+		onLogout,
+		additionalAuthenticateOptions
 	} = fullConfig
 
 	logger.info("Configuring session")
@@ -92,7 +94,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		authenticator({
 			name: fullConfig.name,
 			errorPath: fullConfig.errorPath,
-			extraAuthReqQueryParams: fullConfig.additionalAuthenticateOptions as {[key: string]: string} | undefined
+			additionalAuthenticateOptions
 		}),
 		(req: Request, res: Response) => {
 			res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
