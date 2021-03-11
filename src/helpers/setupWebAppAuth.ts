@@ -7,7 +7,7 @@ import expressSession from "express-session"
 import passport from "passport"
 import { createRefreshTokenMiddleware } from "../api/createRefreshTokenMiddleware"
 import { VIDPWebAppStrategy } from "../api/VIDPWebAppStrategy"
-import { ISetupWebAppAuthSettings  } from "../interfaces"
+import { IExtraAuthenticateOptions, ISetupWebAppAuthSettings  } from "../interfaces"
 import { mergeConfig, validateConfig } from "../utils/configHelpers"
 import { getUrlPath } from "../utils/getUrlPath"
 import { safeStringify } from "../utils/safeStringify"
@@ -22,8 +22,14 @@ const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, 
 	next()
 }
 
-const authenticator = (name: string, errorPath: string) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
+interface IAuthenticatorOptions extends IExtraAuthenticateOptions {
+	name: string
+	errorPath: string
+}
+
+const authenticator = ({ name, errorPath, extraAuthReqQueryParams }: IAuthenticatorOptions) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
 	return passport.authenticate(name, {
+		extraAuthReqQueryParams,
 		customState: safeStringify({authState: req.veracityAuthState, query: req.query}),
 		failureRedirect: errorPath // Where to route the user if the authentication fails
 	} as any)(req, res, next)
@@ -61,7 +67,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	logger.info("Setting up auth strategy")
 
 	// Create and configure the strategy instance that will perform authentication
-	const strategy = new VIDPWebAppStrategy(fullConfig.oidcConfig as any, onVerify)
+	const strategy = new VIDPWebAppStrategy({ ...fullConfig.oidcConfig }, onVerify)
 
 	// Register the strategy with passport
 	passport.use(fullConfig.name, strategy)
@@ -83,7 +89,11 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 		fullConfig.loginPath,
 		onBeforeLogin,
 		ensureSignInPolicyQueryParameter(fullConfig.policyName),
-		authenticator(fullConfig.name, fullConfig.errorPath),
+		authenticator({
+			name: fullConfig.name,
+			errorPath: fullConfig.errorPath,
+			extraAuthReqQueryParams: fullConfig.additionalAuthenticateOptions as {[key: string]: string} | undefined
+		}),
 		(req: Request, res: Response) => {
 			res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
 		}
@@ -94,7 +104,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	app.post(
 		getUrlPath(fullConfig.oidcConfig.redirectUrl),
 		bodyParser.urlencoded({ extended: true }),
-		authenticator(fullConfig.name, fullConfig.errorPath),
+		authenticator({ name: fullConfig.name, errorPath: fullConfig.errorPath }),
 		ensureVeracityAuthState,
 		onLoginComplete
 	)
