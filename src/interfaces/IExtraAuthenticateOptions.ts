@@ -1,3 +1,3 @@
 export interface IExtraAuthenticateOptions {
-	extraAuthReqQueryParams?: {[key: string]: string}
+	extraAuthReqQueryParams?: {[key: string]: string | number | boolean}
 }

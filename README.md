@@ -275,7 +275,7 @@ additionalAuthenticateOptions?|IExtraAuthenticateOptions|Additional options pass
 
 Property|Type|Description
 -|-|-
-extraAuthReqQueryParams?|{[key: string]: string}|
+extraAuthReqQueryParams?|{[key: string]: string \| number | boolean}|
 
 ### ILoggerLike
 
