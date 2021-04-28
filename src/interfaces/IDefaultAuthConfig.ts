@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import { IOIDCStrategyOptionWithRequest, VerifyOIDCFunctionWithReq } from "passport-azure-ad"
 import { LogLevel } from "../helpers/logger"
 import { IMakeSessionConfigObjectOptions } from "../helpers/makeSessionConfigObject"
+import { IExtraAuthenticateOptions } from "./IExtraAuthenticateOptions"
 
 interface IOIDCStrategyOption extends Omit<IOIDCStrategyOptionWithRequest, "scope" | "clientSecret" | "passReqToCallback"> {
 	scope?: string[]
@@ -27,4 +28,8 @@ export interface IDefaultAuthConfig {
 export interface IFullAuthConfig extends Omit<IDefaultAuthConfig, "oidcConfig"> {
 	oidcConfig: IOIDCStrategyOption
 	session: IMakeSessionConfigObjectOptions
+	/**
+	 * Additional options passed to `passport.authenticate`
+	 */
+	additionalAuthenticateOptions?: IExtraAuthenticateOptions
 }

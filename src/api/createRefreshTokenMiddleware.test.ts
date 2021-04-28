@@ -18,11 +18,19 @@ const req = {
 	}
 } as any
 const res: any = ""
-jest.mock("./request", () => jest.fn().mockResolvedValue(JSON.stringify({
+jest.mock("./request", () => jest.fn().mockResolvedValue({
 	refresh_token: "asdasdasdsadsadasdsada",
 	access_token: "atgafuwtehkdas",
 	token_endpoint: VERACITY_METADATA_ENDPOINT
-})))
+}))
+jest.mock("axios", () => ({ post: jest.fn().mockResolvedValue({
+	data: {
+		refresh_token: "asdasdsa",
+		access_token: "adasdasdas",
+		expires_in: 1000 * 60 * 60 * 60,
+		expires_on: Date.now() + 10000
+	}
+})}))
 describe("createRefreshTokenMiddleware", () => {
 	it("it does call next()", async () => {
 		const refreshTokenMiddleware = createRefreshTokenMiddleware(config)

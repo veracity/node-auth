@@ -2,8 +2,20 @@
 version: v1.14.1
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
+  SNYK-JS-ELLIPTIC-1064899:
+    - '*':
+        reason: None Given
+        expires: 2021-03-18T09:02:28.849Z
+  SNYK-JS-LODASH-1018905:
+    - '*':
+        reason: None Given
+        expires: 2021-03-18T09:02:43.892Z
+  SNYK-JS-LODASH-1040724:
+    - '*':
+        reason: None Given
+        expires: 2021-03-18T09:02:55.926Z
   SNYK-JS-LODASH-590103:
     - '*':
         reason: None Given
-        expires: 2021-01-20T10:13:33.867Z
+        expires: 2021-03-18T09:03:08.379Z
 patch: {}

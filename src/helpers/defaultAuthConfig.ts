@@ -52,8 +52,9 @@ export const authConfig: IDefaultAuthConfig = {
 		if (expires_on) additionalInfo.accessTokenLifetime = Number(expires_on)
 
 		if (!accessToken || !refreshToken) {
-			logger.error("onVerify: Missing " + accessToken ? "access" : "refresh" + " token")
-			return done(new Error("Missing " + accessToken ? "access" : "refresh" + " token"), null)
+			const message = "onVerify: Missing " + (accessToken ? "refresh" : "access") + " token"
+			logger.error(message)
+			return done(new Error(message), null)
 		}
 
 		const user = { // Extract information from the data returned from B2C/ADFS

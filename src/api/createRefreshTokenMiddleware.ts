@@ -1,4 +1,6 @@
+import axios from "axios"
 import { NextFunction, Request, Response } from "express"
+import FormData from "form-data"
 import { VIDPError } from "../errors"
 import { VIDPErrorSources } from "../errors/VIDPError"
 import { CustomLogger } from "../helpers/logger"
@@ -39,6 +41,16 @@ export interface IRefreshResponse {
 	scope: string
 }
 
+const makeFormData = (d: { [key: string]: string | undefined }) => {
+	const formData = new FormData()
+	Object.keys(d).map((k) => {
+		if (d[k]) {
+			formData.append(k, d[k])
+		}
+	})
+	return formData
+}
+
 /**
  * Middleware for getting new access token from refresh token
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/authorization-code-flow#4-refresh-the-token
@@ -60,10 +72,15 @@ export const createRefreshTokenMiddleware = ({ clientID, clientSecret, identityM
 		logger.info("Got refresh token from " + (resolverFn ? "passed in resolverFn" : "request"))
 		// const endpoint = `https://login.microsoftonline.com/${tenantID}/oauth2/v2.0/token?p=${policyName}`
 
-		const metadataString = await request(identityMetadata)
-		const metadata = JSON.parse(metadataString)
+		const metadataUrl = new URL(identityMetadata)
+		metadataUrl.searchParams.append("p", policyName)
+		logger.info("URL: " + metadataUrl.toString())
+		const metadata = await request<{ token_endpoint: string }>({ url: metadataUrl.toString() })
+
 		const tokenEndpointUrl = new URL(metadata.token_endpoint)
-		tokenEndpointUrl.searchParams.append("p", policyName)
+		if (!tokenEndpointUrl.searchParams.has("p")) {
+			tokenEndpointUrl.searchParams.append("p", policyName)
+		}
 		const payload = {
 			client_id: clientID,
 			client_secret: clientSecret,
@@ -72,13 +89,13 @@ export const createRefreshTokenMiddleware = ({ clientID, clientSecret, identityM
 			refresh_token: refreshToken
 		}
 
-		const response = await request(tokenEndpointUrl.toString(), {
-			method: "POST",
-			form: payload
+		const form = makeFormData(payload)
+		const response = await axios.post<IRefreshResponse>(tokenEndpointUrl.toString(), form, {
+			headers: form.getHeaders()
 		})
-		logger.info("Successful request to get new access token from refresh_token")
+		const data = response.data
 
-		const data = JSON.parse(response)
+		logger.info("Successful request to get new access token from refresh_token")
 
 		if (tokenPlacement && typeof tokenPlacement !== "function") {
 			logger.error("createRefreshTokenMiddleware: tokenPlacement passed to refreshTokenMiddleware was of type " + typeof tokenPlacement + " but expected function")
@@ -90,8 +107,8 @@ export const createRefreshTokenMiddleware = ({ clientID, clientSecret, identityM
 		} else {
 			if (data.access_token && data.refresh_token) {
 				const { refresh_token, access_token, expires_in, expires_on } = data
-				const additionalInfo: {accessTokenExpires?: number, accessTokenLifetime?: number} = {}
-				if (expires_in) additionalInfo.accessTokenExpires =  Number(expires_in)
+				const additionalInfo: { accessTokenExpires?: number, accessTokenLifetime?: number } = {}
+				if (expires_in) additionalInfo.accessTokenExpires = Number(expires_in)
 				if (expires_on) additionalInfo.accessTokenLifetime = Number(expires_on)
 				const anyReq = req as any
 				anyReq.user.tokens.services = {
@@ -102,7 +119,7 @@ export const createRefreshTokenMiddleware = ({ clientID, clientSecret, identityM
 				logger.info("Success updating tokens to user session")
 			} else {
 				logger.error("No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
-				throw new VIDPError("missing_token","No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
+				throw new VIDPError("missing_token", "No access_token or refresh_token found when trying to refresh in refreshTokenMiddleware")
 			}
 		}
 		return next()

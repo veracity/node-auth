@@ -32,7 +32,7 @@
 			"type": "node",
 			"request": "launch",
 			"name": "Launch 101-JS-Auth",
-			"program": "${workspaceFolder}\\samples\\101-JS-Auth\\start.js"
+			"program": "${workspaceFolder}\\examples\\101-JS-Auth\\start.js"
 		}
 	]
 }
