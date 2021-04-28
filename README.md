@@ -30,6 +30,7 @@ This library provides utilities that help with authentication against the Veraci
 - [Data structures](#data-structures)
   * [IDefaultAuthConfig](#idefaultauthconfig)
   * [IFullAuthConfig](#ifullauthconfig)
+  * [IExtraAuthenticateOptions](#iextraauthenticateoptions)
   * [ILoggerLike](#iloggerlike)
   * [IRouterLike](#irouterlike)
   * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
@@ -267,6 +268,14 @@ Property|Type|Description
 -|-|-
 oidcConfig|IOIDCStrategyOption|
 session|IMakeSessionConfigObjectOptions|
+additionalAuthenticateOptions?|IExtraAuthenticateOptions|Additional options passed to `passport.authenticate`
+
+### IExtraAuthenticateOptions
+
+
+Property|Type|Description
+-|-|-
+extraAuthReqQueryParams?|{[key: string]: string \| number | boolean}|
 
 ### ILoggerLike
 
@@ -344,6 +353,7 @@ clientSecret?|string|The client secret from the Application Credentials you crea
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
 apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
+additionalAuthenticateOptions?|IExtraAuthenticateOptions|Additional options passed to `passport.authenticate`
 
 ### IVIDPJWTTokenHeader
 
