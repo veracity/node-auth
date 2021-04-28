@@ -29,7 +29,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@veracity/node-auth": "3.0.0-rc5",
+    "@veracity/node-auth": "3.0.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
