@@ -1,9 +1,7 @@
 // Import the dependencies we need
 import {
-	createEncryptedSessionStore,
 	generateCertificate,
-	setupWebAppAuth,
-	VERACITY_API_SCOPES
+	setupWebAppAuth
 } from "@veracity/node-auth"
 import express from "express"
 import { MemoryStore } from "express-session"
@@ -12,22 +10,17 @@ import https from "https"
 // Create our express instance
 const app = express()
 
-// Create an encrypted version of the memory store to ensure tokens are encrypted at rest.
-// This is an optional, but recommeded step.
-const encryptedSessionStorage = createEncryptedSessionStore("encryptionKey")(new MemoryStore())
-
 // Create the strategy object and configure it
 const { refreshTokenMiddleware } = setupWebAppAuth({
 	app,
 	strategy: { // Fill these in with values from your Application Credential
 		clientId: "",
 		clientSecret: "",
-		replyUrl: "",
-		apiScopes: [VERACITY_API_SCOPES.services] // We want a Services API access token.
+		replyUrl: ""
 	},
 	session: {
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
-		store: encryptedSessionStorage // Use encrypted memory store
+		store: new MemoryStore() // Use MemoryStore only for local development
 	}
 })
 
@@ -42,7 +35,8 @@ app.get("/user", (req, res) => {
 
 // Create an endpoint where we can refresh the services token.
 // By default this will refresh it when it has less than 5 minutes until it expires.
-app.get("/refresh", refreshTokenMiddleware(VERACITY_API_SCOPES.services), (req, res) => {
+app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
+	console.log("Refreshed token")
 	res.send({
 		updated: Date.now(),
 		user: req.user

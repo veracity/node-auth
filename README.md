@@ -1,11 +1,11 @@
 # Veracity Authentication library for NodeJS
-This library provides utilities that help with authentication against the Veracity Identity Provider.
+[![npm version](https://img.shields.io/npm/v/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth "View this project on npm")
+[![package dependencies](https://img.shields.io/librariesio/release/npm/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth "View this project on npm")
+[![Known Vulnerabilities](https://snyk.io/test/github/veracity/node-auth/badge.svg?targetFile=package.json)](https://snyk.io/test/github/veracity/node-auth?targetFile=package.json)
+[![Issues](https://img.shields.io/github/issues/veracity/node-auth.svg)]( https://github.com/veracity/node-auth/issues )
+[![Downloads](https://img.shields.io/npm/dw/@veracity/node-auth)](https://npmjs.org/package/@veracity/node-auth)
 
-## Version 2.0 released
-The libray now store user data in the session object from [`express-session`](https://www.npmjs.com/package/express-session) (`req.session`). This change is done due to issues found with the version 1 of this package when running multiple node.exe processes on the same server.
-
-## Version 1.0 released
-Version `1.0.0` is the first officially released and supported implementation of this library. The API has been changed from version `0.3.1-beta` and is not backwards compatible. This documentation as been revamped to describe the new library. See the code samples for detailed implementation instructions.
+This library provides utilities that help with authentication against the Veracity Identity Provider. It's based on the robust libraries [`passport`](https://github.com/jaredhanson/passport) and the strategy [`passport-azure-ad`](https://github.com/AzureAD/passport-azure-ad).
 
 ## Features
 - PassportJS authentication strategy for web applications using the Veracity Identity Provider.
@@ -17,24 +17,26 @@ Version `1.0.0` is the first officially released and supported implementation of
 
 <!-- toc -->
 
-- [Quick Start](#quick-start)
-  * [onVerify / Verifier](#onverify--verifier)
-- [Encrypting session](#encrypting-session)
+- [Installation](#installation)
+- [Examples](#examples)
+- [Usage](#usage)
 - [Passing state](#passing-state)
-- [Error handling](#error-handling)
+- [Check if the user is logged in](#check-if-the-user-is-logged-in)
 - [Authentication process](#authentication-process)
+- [Refresh token](#refresh-token)
 - [Logging out](#logging-out)
+- [Error handling](#error-handling)
+- [Logging](#logging)
 - [Data structures](#data-structures)
+  * [IDefaultAuthConfig](#idefaultauthconfig)
+  * [IFullAuthConfig](#ifullauthconfig)
+  * [IExtraAuthenticateOptions](#iextraauthenticateoptions)
+  * [ILoggerLike](#iloggerlike)
   * [IRouterLike](#irouterlike)
   * [ISetupWebAppAuthSettings](#isetupwebappauthsettings)
   * [IVIDPAccessTokenPayload](#ividpaccesstokenpayload)
   * [IVIDPAccessTokenData](#ividpaccesstokendata)
   * [IVIDPAccessToken](#ividpaccesstoken)
-  * [IVIDPConfiguration](#ividpconfiguration)
-  * [IVIDPWebAppConfiguration](#ividpwebappconfiguration)
-  * [IVIDPIDTokenPayload](#ividpidtokenpayload)
-  * [IVIDPIDTokenData](#ividpidtokendata)
-  * [IVIDPTokenData](#ividptokendata)
   * [IVIDPWebAppStrategySettings](#ividpwebappstrategysettings)
   * [IVIDPJWTTokenHeader](#ividpjwttokenheader)
   * [IVIDPJWTTokenData](#ividpjwttokendata)
@@ -45,95 +47,73 @@ Version `1.0.0` is the first officially released and supported implementation of
   * [VIDPTokenValidationErrorCodes](#vidptokenvalidationerrorcodes)
   * [VIDPStrategyErrorCodes](#vidpstrategyerrorcodes)
   * [VIDPRefreshTokenErrorCodes](#vidprefreshtokenerrorcodes)
+- [Helpers](#helpers)
+  * [Encrypting session](#encrypting-session)
+  * [Generate certificate](#generate-certificate)
 
 <!-- tocstop -->
 
-## Quick Start
-See one of the [samples](./samples) to get started.
+## Installation
+Run `npm i @veracity/node-auth` or `yarn add @veracity/node-auth` to install. TypeScript types are included in the package.
 
-### onVerify / Verifier
-This library helps you perform authentication with Veracity and returns user information as well as any requested access tokens. But often it is useful to be able to look up additional user information and augment the `req.user` object with it so that your application may use it later. You can do this before every request to your server, but that may take time and cost resources and you may not need to re-fetch this information multiple times after the user is logged in. To facilitate doing such operations `passport` provides the ability to pass a `verifier` function. It is meant to ensure the user is valid and optionally augment it with more data. Since the Veracity IDP + this library already has verified the user for you, you may use this function to query other services, modify the user object or do other such operations during the login process.
+## Examples
+See one of the [examples](./examples) to get started. 
 
-**Why not do this in onLoginComplete?** The verifier function is the "correct" place to perform additional lookups about the user. Allthough there is nothing technically wrong with doing it within the `onLoginComplete` function this will mix up the "intent" of the function. The verifier is meant to verify and augment the user object while `onLoginComplete` is a plain middleware meant to route the user to the next logical step in their login process.
+## Usage
+The helper `setupWebAppAuth` simplifies setting up authentication towards Veracity. If you're looking for an alternative, you can use [`passport`](https://github.com/jaredhanson/passport) in combination with [`passport-azure-ad`](https://github.com/AzureAD/passport-azure-ad). 
 
-The `verifier` function is called with three arguments: `tokenData`, `req` and `done`:
-
-Argument|Description
--|-
-`tokenData`|An object matching the [IVIDPTokenData](#IVIDPTokenData) interface with an id token and all requested access tokens.
-`req`|The request object for the returned post request from the Veracity IDP
-`done`|The `passport` done function. It takes two arguments `error` and `user` in that order. For a successful verification call `done(null, user)` with the user object you want to place on `req.user`. For errors call `done(error)` to pass the error to the error handling mechanism in the strategy. It will be wrapped in a `VIDPError` object and sent to any registered error handler on the router where the strategy is connected.
-
-In many cases it is sufficient to simply pass through the tokenData object as the user object. This is in fact what the authentication helper functions do for you by default. But you can also perform synchronous or asynchronous operations within the verifier to add information as needed.
-
-With the helper functions you can simply pass an async `onVerify` function to perform additional asynchronous lookups.
 ```javascript
-setupWebAppAuth({
-	// ... other settings omitted
-	onVerify: async (tokenData, req, done) => {
-		// Look up the user profile from another service based on the user id 
-		const profile = await getUserProfile(tokenData.idToken.payload.userId)
+const express = require("express")
+const https = require("https")
+const app = express()
+const { setupWebAppAuth, generateCertificate } = require("@veracity/node-auth")
+const { MemoryStore } = require("express-session")
 
-		// Add profile info to the user object which will be placed on `req.user`
-		done(null, {
-			...tokenData,
-			profile
-		})
-	}
-})
-```
-
-The code for the verifier function is identical if you are using the strategy directly. The only difference is where you pass the function in.
-```javascript
-// Create our verifier function
-const verifier = async (tokenData, req, done) => {
-	// Look up the user profile from another service based on the user id 
-	const profile = await getUserProfile(tokenData.idToken.payload.userId)
-
-	// Add profile info to the user object which will be placed on `req.user`
-	done(null, {
-		...tokenData,
-		profile
-	})
-}
-
-// Create the strategy instance and register it with passport using the name "veracity"
-// new VeracityAuthFlowStrategy(IVeracityAuthFlowStrategySettings, VerifierFunction<TUser>)
-passport.use("veracity", new VIDPOpenIDCStrategy(strategySettings, verifier))
-```
-
-## Encrypting session
-When configuring authentication you need to provide a place to store session data. This is done through the `store` configuration for `express-session`. In the samples we use a MemoryStore instance that keeps the data in memory, but this is not suitable to for production as it does not scale. For such systems you would probably go with a database or cache of some kind such as MySQL or Redis.
-
-Once you set up such a session storage mechanism, however there are some considerations you need to take into account. Since the access tokens for individual users are stored as session data it means that anyone with access to the session storage database can extract any token for a currently logged in user and use it themselves. Since the token is the only key needed to perform actions on behalf of the user it is considered sensitive information and must therefore be protected accordingly.
-
-This library comes with a helper function to deal with just this scenario called `createEncryptedSessionStore`. This function uses the **AES-256-CBC** algorithm to encrypt and decrypt a subset of session data on-the-fly preventing someone with access to the store from seeing the plain access tokens. They will only see an encrypted blob of text.
-
-The way `createEncryptedSessionStore` works is that it replaces the read and write functions of an `express-session` compatible store with augmented versions that decrypt and encrypt a set of specified properties (if present on the session object) respectively. This means that you can still use any of the compatible store connectors and simply pass it through the helper function to get a version that provides encryption.
-
-Using the Redis connector you can configure an encrypted session like this:
-```javascript
-const session = require("express-session")
-const { createEncryptedSessionStore } = require("@veracity/node-auth")
-const redisStore = require("connect-redis")(session)
-
-// You should NOT hard-code the encryption key. It should be served from a secure store such as Azure KeyVault or similar
-const encryptedRedisStore = createEncryptedSessionStore("encryption key")(redisStore)
-
-// We can now use the encryptedRedisStore in place of a regular store to configure authentication
-setupWebAppAuth({
+const { refreshTokenMiddleware } = setupWebAppAuth({
 	app,
-	strategy: {
-		clientId: "",
-		clientSecret: "",
-		replyUrl: ""
-	},
 	session: {
-		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9",
-		store: encryptedRedisStore // Use encrypted version of redis store
+		secret: "your-long-super-secret-secret-here",
+		store: new MemoryStore() // Notice! Only use MemoryStore for development
+	},
+	strategy: { // Fill these in with values from your Application Credential
+		clientId: "<your-client-id>",
+		clientSecret: "<your-client-secret>",
+		replyUrl: "https://localhost:3000/auth/oidc/loginreturn" // make sure to update with your own replyUrl
 	}
 })
+
+// This endpoint will return our user data so we can inspect it.
+app.get("/user", (req, res) => {
+	if (req.isAuthenticated()) {
+		res.send(req.user)
+		return
+	}
+	res.status(401).send("Unauthorized")
+})
+
+// Create an endpoint where we can refresh the services token.
+app.get("/refresh", refreshTokenMiddleware(), (req, res) => {
+	res.send("Refreshed token!")
+})
+
+// Set up the HTTPS development server
+const server = https.createServer({
+	...generateCertificate() // Generate self-signed certificates for development
+}, app)
+
+server.on("error", (error) => { // If an error occurs halt the application
+	console.error(error)
+	process.exit(1)
+})
+
+server.listen(3000, () => { // Begin listening for connections
+	console.log("Listening for connections on port 3000")
+})
 ```
+`setupWebAppAuth` register the following default routes: 
+* `/login`: Path used to initialize the login process
+* `/logout`: Path used to log out the user and delete session data
+* `/error`: Where the user is redirected if there are errors in the login process
 
 ## Passing state
 Sometimes it is useful to be able to pass data from before the login begins all the way through the authentication process until control is returned back to your code. This library supports this in two ways for web and native applications (the bearer token validation strategy does not support this):
@@ -147,42 +127,60 @@ To pass state using the helper functions for web and native applications you sim
 setupWebAppAuth({
 	// ... other settings are omitted for brevity
 	onBeforeLogin: (req, res, next) => {
-		req.veracityAuthState = {
-			loginBeganAt: Date.now()
-		}
-		next() // You **MUST** call next in your onBeforeLogin handler in order to continue the login process.
+		req.veracityAuthState = JSON.stringify({redirect: "/here"})
+		next()
 	},
-	onLoginComplete: (req, res, next) => {
-		// log login duration
-		console.log("Login took (ms)", Date.now() - req.veracityAuthState.loginBeganAt)
-
-		// Redirect to the specified returnTo path from before the login began or to home if not provided.
-		res.redirect(req.query.returnTo || "/")
+	onLoginComplete: (req, res, next) => {		
+		const state = JSON.parse(req.veracityAuthState)
+		res.redirect(state.redirect || "/")
 	}
 })
 ```
 
-When using the passport strategy directly you can do the same thing by inserting your own middleware in the authentication chain, which is basically what the setup helper functions do anyway.
+## Check if the user is logged in
+Call the method `req.isAuthenticated()` to see if the user is logged in. Returns a `boolean`.
+
+## Authentication process
+The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow).
+
+This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build your application.
+
+## Refresh token
+The library also gives you a way to refresh the token. The method is returned to you when calling the `setupWebAppAuth` method:
 ```javascript
-app.get("/login", (req, res, next) => {
-	req.veracityAuthState = {
-		loginBeganAt: Date.now()
+const { refreshTokenMiddleware } = setupWebAppAuth(/* ... config ... */)
+``` 
+Later, use the `refreshTokenMiddleware` method like this:
+```javascript
+app.get("/refresh", refreshTokenMiddleware(), (req, res, next) => {
+	res.send("OK, token refreshed")
+})
+```
+If you provide your own `onVerify` function to `setupWebAppAuth` and want to store the tokens in some specific location, you can pass in the optional arguments for resolving refresh token and storing the access token like so: 
+```javascript
+const resolveRefreshToken = (req) => req.user.customTokenPlacement.refreshToken
+const storeRefreshedTokens = (refreshResponse, req) => {
+	req.user.customTokenPlacement = {
+		accessToken: refreshResponse.access_token,
+		refreshToken: refreshResponse.refresh_token
 	}
-	next()
-}, passport.authenticate("veracity"))
+}
+app.get("/refresh", refreshTokenMiddleware(resolveRefreshToken, storeRefreshedTokens), (req, res, next) => {
+	res.send("OK, token refreshed")
+})
+```
 
-app.post(
-	"[path of replyUrl]",
-	bodyParser.urlencoded({extended: true}),
-	passport.authenticate("veracity"),
-	(req, res) => {
-		// log login duration
-		console.log("Login took (ms)", Date.now() - req.veracityAuthState.loginBeganAt)
+## Logging out
+Logging out users is a relatively simple process. Your application is storing session information (user data including access tokens) within some kind of session storage. This must be removed. Then you need to redirect users to the sign out page on Veracity to centrally log them out. This last step is required by Veracity to adhere to security best-practices. The logout url is set up bt default to "/logout", but you can change it by passing `logoutPath` in the configuration object of `setupWebAppAuth`.
 
-		// Redirect to the specified returnTo path from before the login began or to home if not provided.
-		res.redirect(req.query.returnTo || "/")
-	}
-)
+The URL on Veracity where you should direct users logging out is stored as a constant in this library:
+```javascript
+const { VERACITY_LOGOUT_URL } = require("@veracity/node-auth")
+
+app.get("/logout", (req, res) => {
+	req.logout()
+	res.redirect(VERACITY_LOGOUT_URL)
+})
 ```
 
 ## Error handling
@@ -210,21 +208,32 @@ app.use((err, req, res, next) => {
 })
 ```
 
-## Authentication process
-The authentication process used by Veracity is called *Open ID Connect* with token negotiation using *Authorization Code Flow*. Behind the scenes, Veracity relies on Microsoft Azure B2C to perform the actual login. You can read more about the protocol on [Microsoft's website](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow).
-
-This library provides you with a *strategy* that you can use to perform authentication. The strategy is compatible with PassportJS and allows any Connect-compatible library to authenticate with Veracity. The technicalities of the protocol are then handled by the library and you can focus on utilizing the resulting tokens to call APIs and build cool applications.
-
-## Logging out
-Logging out users is a relatively simple process. Your application is storing session information (user data including access tokens) within some kind of session storage. This must be removed. Then you need to redirect users to the sign out page on Veracity to centrally log them out. This last step is required by Veracity to adhere to security best-practices.
-
-The URL on Veracity where you should direct users logging out is stored as a constant in this library:
+## Logging
+You can pass in a custom logger when using `setupWebAppAuth`. Example:
 ```javascript
-const { VERACITY_LOGOUT_URL } = require("@veracity/node-auth")
+const express = require("express")
+const { MemoryStore } = require("express-session")
+const { setupWebAppAuth } = require("../../dist")
+const winston = require("winston")
 
-app.get("/logout", (req, res) => {
-	req.logout()
-	res.redirect(VERACITY_LOGOUT_URL)
+const app = express()
+
+setupWebAppAuth({
+	app,
+	strategy: {
+		clientId: "...",
+		clientSecret: "...",
+		replyUrl: "https://localhost:3000/auth/oidc/loginreturn"
+	},
+	session: {
+		secret: "...",
+		store: new MemoryStore()
+	},
+	logger: winston.createLogger({
+		transports: [
+			new winston.transports.Console(),
+		]
+	  })
 })
 ```
 
@@ -234,6 +243,50 @@ app.get("/logout", (req, res) => {
 The library makes use of several data structures. They are all defined as TypeScript interfaces that will be visible in any TypeScript aware editor. Below is an export of all public types.
 
 <!-- types -->
+### IDefaultAuthConfig
+
+
+Property|Type|Description
+-|-|-
+loginPath|string|
+logoutPath|string|
+errorPath|string|
+logLevel|LogLevel|
+name|string|
+oidcConfig|Omit<IOIDCStrategyOption, "clientID" \| "redirectUrl">|
+policyName|string|
+tenantID|string|
+onLogout|(req: Request, res: Response, next: NextFunction) => void|
+onBeforeLogin|(req: Request, res: Response, next: NextFunction) => void|
+onVerify|VerifyOIDCFunctionWithReq|
+onLoginComplete|(req: Request, res: Response, next: NextFunction) => void|
+
+### IFullAuthConfig
+*extends Omit<IDefaultAuthConfig, "oidcConfig">*
+
+Property|Type|Description
+-|-|-
+oidcConfig|IOIDCStrategyOption|
+session|IMakeSessionConfigObjectOptions|
+additionalAuthenticateOptions?|IExtraAuthenticateOptions|Additional options passed to `passport.authenticate`
+
+### IExtraAuthenticateOptions
+
+
+Property|Type|Description
+-|-|-
+extraAuthReqQueryParams?|{[key: string]: string \| number | boolean}|
+
+### ILoggerLike
+
+
+Property|Type|Description
+-|-|-
+info|(str: any) => void|
+warn|(str: any) => void|
+error|(str: any) => void|
+levels?|(str: any) => void|
+
 
 ### IRouterLike
 *extends Pick<Router, "use" | "get" | "post">*
@@ -247,17 +300,20 @@ Property|Type|Description
 
 Property|Type|Description
 -|-|-
-name?|string|An optional name for the strategy when registering with passport.
 app|IRouterLike|The express application to configure or the router instance.
-session|IMakeSessionConfigObjectOptions|Session configuration
-strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
+errorPath?|string|Where to redirect user on error
 loginPath?|string|The path where login will be configured
 logoutPath?|string|The path where logout will be configured
+logLevel?<br>="error"|LogLevel|Logging level
+session|IMakeSessionConfigObjectOptions|Session configuration for express-session
+strategy|IVIDPWebAppStrategySettings|Configuration for the strategy you want to use.
+name?<br>="veracity-oidc"|string|Name of the passport strategy
+policyName?<br>="B2C_1A_SignInWithADFSIdp"|string|Policy to use when logging in.
 onBeforeLogin?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void|Provide a function that executes before the login process starts.<br>It executes as a middleware so remember to call next() when you are done.
-onVerify?|VIDPWebAppStrategyVerifier|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
-onLoginComplete?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
+onVerify?|VerifyOIDCFunctionWithReq|The verifier function passed to the strategy.<br>If not defined will be a passthrough verifier that stores everything from the strategy on `req.user`.
+onLoginComplete?|(req: Request, res: Response, next: NextFunction) => void,|A route handler to execute once the login is completed.<br>The default will route the user to the returnTo query parameter path or to the root path.
 onLogout?|(req: Request & {veracityAuthState?: any}, res: Response, next: NextFunction) => void,|A route handler to execute once the user tries to log out.<br>The default handler will call `req.logout()` and redirect to the default Veracity central logout endpoint.
-onLoginError?|(error: VIDPError, req: Request, res: Response, next: NextFunction) => void|An error handler that is called if an error response is received from the Veracity IDP authentication redirect.<br>If not defined will pass the error on to the default error handler in the app or router.
+logger?|ILoggerLike|Optional provide your own logger
 
 ### IVIDPAccessTokenPayload
 *extends IVIDPJWTTokenPayloadCommonClaims*
@@ -287,51 +343,6 @@ Property|Type|Description
 -|-|-
 
 
-### IVIDPConfiguration
-
-
-Property|Type|Description
--|-|-
-clientID|string|Your applications client id from the Veracity for Developers Project Portal.
-replyURL|string|One of your applications reply urls from the Veracity for Developers Portal.
-
-### IVIDPWebAppConfiguration
-*extends IVIDPConfiguration*
-
-Property|Type|Description
--|-|-
-clientSecret|string|Your applications client secret fromt he Veracity for Developers Project Portal.
-
-### IVIDPIDTokenPayload
-*extends IVIDPJWTTokenPayloadCommonClaims*
-
-Property|Type|Description
--|-|-
-c_hash?|string|Hash of the accompanying authorization code if this token is part of an authorization code flow.
-at_hash?|string|Hash of the accompanying access token if this was part of an access token exchange.
-acr|string|
-auth_time|number|
-userId|string|The unique Veracity ID of the user.
-dnvglAccountName|string|
-myDnvglGuid⬇|string|**Deprecated:**  - Legacy Veracity ID of the user. Use userId claim instead.
-oid|string|The object id within the Veracity IDP.<br>Do not use this for user identification as it is not propagated to other Veracity services.
-upn|string|
-
-### IVIDPIDTokenData
-*extends IVIDPJWTTokenData<IVIDPIDTokenPayload>*
-
-Property|Type|Description
--|-|-
-export interface IVIDPIDToken extends IVIDPJWTToken<IVIDPIDTokenPayload> { }|unspecified|
-
-### IVIDPTokenData
-
-
-Property|Type|Description
--|-|-
-idToken|IVIDPIDTokenData|The parsed identity token.
-accessTokens|{[apiScope: string]: IVIDPAccessTokenData}|Any access tokens recievied indexed by their associated scope.
-
 ### IVIDPWebAppStrategySettings
 
 
@@ -342,6 +353,7 @@ clientSecret?|string|The client secret from the Application Credentials you crea
 replyUrl|string|The reply url from the Application Credentials you created in the Veracity for Developers Provider Hub.
 apiScopes?<br>=["https://dnvglb2cprod.onmicrosoft.com/83054ebf-1d7b-43f5-82ad-b2bde84d7b75/user_impersonation"]|string[]|The scopes you wish to authenticate with. An access token will be retrieved for each api scope.<br>If you only wish to authenticate with Veracity you can ignore this or set it to an empty array to slightly improve performance.
 metadataURL?<br>=VERACITY_METADATA_ENDPOINT|string|The url where metadata about the IDP can be found.<br>Defaults to the constant VERACITY_METADATA_ENDPOINT.
+additionalAuthenticateOptions?|IExtraAuthenticateOptions|Additional options passed to `passport.authenticate`
 
 ### IVIDPJWTTokenHeader
 
@@ -391,7 +403,6 @@ header|IVIDPJWTTokenHeader|
 payload|TPayload|
 signature|string|
 
-
 ### VIDPRequestErrorCodes
 
 
@@ -414,7 +425,6 @@ Property|Type|Description
 "invalid_resource"|"invalid_resource"|The target resource is invalid because it does not exist, Azure AD can't find it, or it's not correctly configured.
 "interaction_required"|"interaction_required"|The request requires user interaction. For example, an additional authentication step is required.
 "temporarily_unavailable"|"temporarily_unavailable"|The server is temporarily too busy to handle the request.
-"missing_access_token"|"missing_access_token"|The IPD did not return an access token. Check that you specified a valid scope.
 
 ### VIDPTokenValidationErrorCodes
 
@@ -447,3 +457,65 @@ Property|Type|Description
 "cannot_resolve_token"|"cannot_resolve_token"|Token refresh middleware was unable to resolve the token using the provided resolver.<br>See description for more details.
 
 <!-- /types -->
+
+## Helpers
+### Encrypting session
+When configuring authentication you need to provide a place to store session data. This is done through the `store` configuration for `express-session`. In the samples we use a MemoryStore instance that keeps the data in memory, but this is not suitable to for production as it does not scale. For such systems you would probably go with a database or cache of some kind such as MySQL or Redis.
+
+Once you set up such a session storage mechanism, however there are some considerations you need to take into account. Since the access tokens for individual users are stored as session data it means that anyone with access to the session storage database can extract any token for a currently logged in user and use it themselves. Since the token is the only key needed to perform actions on behalf of the user it is considered sensitive information and must therefore be protected accordingly.
+
+This library comes with a helper function to deal with just this scenario called `createEncryptedSessionStore`. This function uses the **AES-256-CBC** algorithm to encrypt and decrypt a subset of session data on-the-fly preventing someone with access to the store from seeing the plain access tokens. They will only see an encrypted blob of text.
+
+The way `createEncryptedSessionStore` works is that it replaces the read and write functions of an `express-session` compatible store with augmented versions that decrypt and encrypt a set of specified properties (if present on the session object) respectively. This means that you can still use any of the compatible store connectors and simply pass it through the helper function to get a version that provides encryption.
+
+Using the Redis connector you can configure an encrypted session like this:
+```javascript
+const session = require("express-session")
+const { createEncryptedSessionStore } = require("@veracity/node-auth")
+const redisStore = require("connect-redis")(session)
+
+// You should NOT hard-code the encryption key. It should be served from a secure store such as Azure KeyVault or similar
+const encryptedRedisStore = createEncryptedSessionStore("encryption key")(redisStore)
+
+// We can now use the encryptedRedisStore in place of a regular store to configure authentication
+setupWebAppAuth({
+	app,
+	strategy: {
+		clientId: "",
+		clientSecret: "",
+		replyUrl: ""
+	},
+	session: {
+		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9",
+		store: encryptedRedisStore // Use encrypted version of redis store
+	}
+})
+```
+
+### Generate certificate
+A helper to generate certificate that can be used for local development.
+
+```javascript
+const express = require("express")
+const app = express()
+const https = require("https")
+const { generateCertificate } = require("@veracity/node-auth")
+
+app.get("/", (req, res, next) => {
+	res.send("Frontpage here")
+})
+
+// Set up the HTTPS development server
+const server = https.createServer({
+	...generateCertificate() // Generate self-signed certificates for development
+}, app)
+
+server.on("error", (error) => { // If an error occurs halt the application
+	console.error(error)
+	process.exit(1)
+})
+
+server.listen(3000, () => { // Begin listening for connections
+	console.log("Listening for connections on https://localhost:3000/")
+})
+```

@@ -2,7 +2,7 @@ import { MemoryStore, SessionOptions, Store } from "express-session"
 
 export interface IMakeSessionConfigObjectOptions extends SessionOptions {
 	/**
-	 * A unique string that is used to sign the session id.
+	 * A unique string that is used to sign the session id. Must be minimum 12 characters or longer
 	 * This MUST NOT be shared with any other application.
 	 */
 	secret: string
@@ -11,6 +11,11 @@ export interface IMakeSessionConfigObjectOptions extends SessionOptions {
 	 * You MUST provide this otherwise express-session will default to using the insecure memory store.
 	 */
 	store: Store | MemoryStore
+	/**
+	 * Name of the cookie stored in the browser
+	 * @default "veracity.app.session"
+	 */
+	name?: string
 }
 
 const RECOMMENDED_SESSION_OPTIONS: Omit<SessionOptions, "secret"> = {

@@ -7,6 +7,6 @@ export const getUrlPath = (absoluteUrl: string) => {
 		const parsed = new URL(absoluteUrl)
 		return parsed.pathname
 	} catch (error) {
-		throw new Error("The url was not absolute or parsing failed: "+error.message)
+		throw new Error("The url " +  absoluteUrl + " was not absolute or parsing failed: " + error.message)
 	}
 }

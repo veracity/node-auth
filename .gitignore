@@ -67,4 +67,4 @@ src/localtest
 dist
 
 # Ignore lock files in samples
-samples/**/package-lock.json
+examples/**/package-lock.json

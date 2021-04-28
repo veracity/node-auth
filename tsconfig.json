@@ -66,7 +66,7 @@
     "src/localtest",
     "**/*.test.ts",
     "node_modules",
-    "samples",
+    "examples",
     "dist"
   ]
 }

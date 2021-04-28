@@ -1,70 +1,126 @@
+// This needs to be imported first to overwrite the "passport-azure-ad" logger
+import { CustomLogger } from "./logger"
+
 import bodyParser from "body-parser"
-import { Request, Response } from "express"
-import sessionMiddleware from "express-session"
+import { NextFunction, Request, Response } from "express"
+import expressSession from "express-session"
 import passport from "passport"
-import { createRefreshTokenMiddleware, VIDPWebAppStrategy } from "../api"
-import { VERACITY_LOGOUT_URL, VERACITY_METADATA_ENDPOINT } from "../constants"
-import { ISetupWebAppAuthSettings } from "../interfaces"
+import { createRefreshTokenMiddleware } from "../api/createRefreshTokenMiddleware"
+import { VIDPWebAppStrategy } from "../api/VIDPWebAppStrategy"
+import { IExtraAuthenticateOptions, ISetupWebAppAuthSettings  } from "../interfaces"
+import { mergeConfig, validateConfig } from "../utils/configHelpers"
 import { getUrlPath } from "../utils/getUrlPath"
-import makeSessionConfigObject from "./makeSessionConfigObject"
+import { safeStringify } from "../utils/safeStringify"
+import authConfig from "./defaultAuthConfig"
+import { makeSessionConfigObject } from "./makeSessionConfigObject"
 
-export const setupWebAppAuth = <TUser = any>(
-	settings: ISetupWebAppAuthSettings) => {
+// Small helper that ensures the policy query parameter is set.
+// If you have links on the client that specify the p=[policy] query paramter this is not needed.
+// We do this since we know which policy to use in all cases and wish to avoid hard coding this into links for the client.
+const ensureSignInPolicyQueryParameter = (policyName: string) => (req: Request, res: Response, next: NextFunction) => {
+	req.query.p = req.query.p || policyName
+	next()
+}
+
+interface IAuthenticatorOptions {
+	name: string
+	errorPath: string
+	additionalAuthenticateOptions?: IExtraAuthenticateOptions
+}
+
+const authenticator = ({ name, errorPath, additionalAuthenticateOptions = {} }: IAuthenticatorOptions) => (req: Request & {veracityAuthState?: string | object}, res: Response, next: NextFunction) => {
+	return passport.authenticate(name, {
+		...additionalAuthenticateOptions,
+		customState: safeStringify({authState: req.veracityAuthState, query: req.query}),
+		failureRedirect: errorPath // Where to route the user if the authentication fails
+	} as any)(req, res, next)
+}
+
+const ensureVeracityAuthState = (req: Request & { veracityAuthState?: any }, res: Response, next: NextFunction) => {
+	if (req.body && req.body.state) {
+		const { authState, query } = JSON.parse(req.body.state)
+		req.veracityAuthState = authState
+		req.query = query || req.query
+	}
+	next()
+}
+
+export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
+	validateConfig(config)
+	const { app, logger: providedLogger, ...rest } = config
+	const fullConfig = mergeConfig(authConfig, rest)
+	const sessionConfig = makeSessionConfigObject(fullConfig.session)
+
+	const logger = new CustomLogger(fullConfig.oidcConfig.loggingLevel).registerLogger(providedLogger)
+
 	const {
-		name = "veracity_oidc",
+		onBeforeLogin,
+		onVerify,
+		onLoginComplete,
+		onLogout,
+		additionalAuthenticateOptions
+	} = fullConfig
 
-		app,
-		session,
-		strategy,
+	logger.info("Configuring session")
 
-		loginPath = "/login",
-		logoutPath = "/logout",
+	// Set up session support for requests
+	app.use(expressSession(sessionConfig))
 
-		onBeforeLogin = (req: any, res: any, next: any) => {next()},
-		onVerify = (data: any, req: any, done: any) => {done(null, data)},
-		onLoginComplete = (req: Request, res: Response) => {
-			res.redirect(req.query.returnTo as string || "/")
-		},
-		onLogout = (req: any, res: any, next: any) => {
-			req.logout()
-			res.redirect(VERACITY_LOGOUT_URL)
-		},
-		onLoginError = (err: any, req: any, res: any, next: any) => {
-			next(err)
-		}
-	} = settings
+	logger.info("Setting up auth strategy")
 
-	app.use(sessionMiddleware(makeSessionConfigObject(session)))
-	app.use(passport.initialize())
-	app.use(passport.session())
+	// Create and configure the strategy instance that will perform authentication
+	const strategy = new VIDPWebAppStrategy({ ...fullConfig.oidcConfig }, onVerify)
 
-	const strategyInstance = new VIDPWebAppStrategy<TUser>(strategy, onVerify)
-	passport.use(name, strategyInstance)
+	// Register the strategy with passport
+	passport.use(fullConfig.name, strategy)
+
+	// Specify what information about the user should be stored in the session. Here we store the entire user object we define in the 'verifier' function.
+	// You can pick only parts of it if you don't need all the information or if you have user information stored somewhere else.
 	passport.serializeUser((user, done) => { done(null, user) })
-	passport.deserializeUser((id, done) => { done(null, id) })
+	passport.deserializeUser((passportSession, done) => { done(null, passportSession) })
 
-	app.get(loginPath, onBeforeLogin, passport.authenticate(name), (req, res, next) => {
-		next(new Error("If you can see this please copy everything on this page "+
-			"and report the error on https://github.com/veracity/node-veracity-auth/issues"
-		))
-	})
+	logger.info("Connecting passport to application")
+
+	// Now that passport is configured we need to tell express to use it
+	app.use(passport.initialize()) // Register passport with our expressjs instance
+	app.use(passport.session()) // We are using sessions to persist the login and must therefore also register the session middleware from passport.
+
+	// Our login route. This is where the authentication magic happens.
+	// We must ensure that the policy query parameter is set and we therefore include our small middleware before the actual login process.
+	app.get(
+		fullConfig.loginPath,
+		onBeforeLogin,
+		ensureSignInPolicyQueryParameter(fullConfig.policyName),
+		authenticator({
+			name: fullConfig.name,
+			errorPath: fullConfig.errorPath,
+			additionalAuthenticateOptions
+		}),
+		(req: Request, res: Response) => {
+			res.redirect(fullConfig.errorPath) // This redirect will never be used unless something failed. The return-url when login is complete is configured as part of the application registration.
+		}
+	)
+
+	// This route is where we retrieve the authentication information posted back from Azure B2C/ADFS.
+	// To perform the necessary steps it needs to parse post data as well as sign in correctly. This is done using the body-parser middleware.
 	app.post(
-		getUrlPath(strategy.replyUrl),
-		bodyParser.urlencoded({extended: true}),
-		passport.authenticate(name),
-		onLoginComplete, onLoginError)
-	app.get(logoutPath, onLogout)
+		getUrlPath(fullConfig.oidcConfig.redirectUrl),
+		bodyParser.urlencoded({ extended: true }),
+		authenticator({ name: fullConfig.name, errorPath: fullConfig.errorPath }),
+		ensureVeracityAuthState,
+		onLoginComplete
+	)
 
-	const refreshTokenMiddleware = createRefreshTokenMiddleware(strategy,
-		(tokenData, req) => {
-			const anyReq: any = req
-			Object.assign(anyReq.user.accessTokens, {
-				[tokenData.scope]: tokenData
-			})
-		}, strategy.metadataURL || VERACITY_METADATA_ENDPOINT)
+	// Our logout route handles logging out of B2C and removing session information.
+	app.get(fullConfig.logoutPath, onLogout)
 
 	return {
-		refreshTokenMiddleware,
-		name
+		refreshTokenMiddleware: createRefreshTokenMiddleware({
+			clientID: fullConfig.oidcConfig.clientID,
+			policyName: fullConfig.policyName,
+			clientSecret: fullConfig.oidcConfig.clientSecret,
+			identityMetadata: fullConfig.oidcConfig.identityMetadata,
+			scope: fullConfig.oidcConfig.scope && typeof fullConfig.oidcConfig.scope !== "string" ? fullConfig.oidcConfig.scope.join(" ") : fullConfig.oidcConfig.scope
+		})
 	}
 }

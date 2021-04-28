@@ -1,3 +1,5 @@
+import { IExtraAuthenticateOptions } from "./IExtraAuthenticateOptions"
+
 export interface IVIDPWebAppStrategySettings {
 	/**
 	 * The client id from the Application Credentials you created in the Veracity for Developers Provider Hub.
@@ -26,4 +28,8 @@ export interface IVIDPWebAppStrategySettings {
 	 * @default VERACITY_METADATA_ENDPOINT
 	 */
 	metadataURL?: string
+	/**
+	 * Additional options passed to `passport.authenticate`
+	 */
+	additionalAuthenticateOptions?: IExtraAuthenticateOptions
 }

@@ -25,4 +25,4 @@ export const VERACITY_LOGOUT_URL = "https://www.veracity.com/auth/logout"
  * The full URL for metadata about the Veracity IDP.
  */
 export const VERACITY_METADATA_ENDPOINT =
-	`https://login.microsoftonline.com/${VERACITY_TENANT_ID}/v2.0/.well-known/openid-configuration?p=${VERACITY_POLICY}`
+	`https://login.veracity.com/${VERACITY_TENANT_ID}/v2.0/.well-known/openid-configuration`
