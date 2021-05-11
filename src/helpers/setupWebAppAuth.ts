@@ -77,7 +77,7 @@ export const setupWebAppAuth = (config: ISetupWebAppAuthSettings) => {
 	// Specify what information about the user should be stored in the session. Here we store the entire user object we define in the 'verifier' function.
 	// You can pick only parts of it if you don't need all the information or if you have user information stored somewhere else.
 	passport.serializeUser((user, done) => { done(null, user) })
-	passport.deserializeUser((passportSession, done) => { done(null, passportSession) })
+	passport.deserializeUser((passportSession: Express.User | false | undefined | null, done) => { done(null, passportSession) })
 
 	logger.info("Connecting passport to application")
 
