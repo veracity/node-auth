@@ -3,13 +3,9 @@ import {
 	generateCertificate,
 	setupWebAppAuth
 } from "@veracity/node-auth"
-import express, { Response } from "express"
+import express from "express"
 import { MemoryStore } from "express-session"
 import https from "https"
-
-export interface TypedRequestBody<T> extends Express.Request {
-    body: T
-}
 
 // Create our express instance
 const app = express()
@@ -29,9 +25,9 @@ const { refreshTokenMiddleware } = setupWebAppAuth({
 })
 
 // This endpoint will return our user data so we can inspect it.
-app.get("/user", (req: TypedRequestBody<{user: string, isAuthenticated: () => boolean}>, res: Response) => {
-	if (req.body.isAuthenticated()) {
-		res.send(req.body.user)
+app.get("/user", (req: any, res: any) => {
+	if (req.isAuthenticated()) {
+		res.send(req.user)
 		return
 	}
 	res.status(401).send("Unauthorized")
@@ -39,11 +35,11 @@ app.get("/user", (req: TypedRequestBody<{user: string, isAuthenticated: () => bo
 
 // Create an endpoint where we can refresh the services token.
 // By default this will refresh it when it has less than 5 minutes until it expires.
-app.get("/refresh", refreshTokenMiddleware(), (req: TypedRequestBody<{user: string}>, res: Response) => {
+app.get("/refresh", refreshTokenMiddleware(), (req: any, res: any) => {
 	console.log("Refreshed token")
 	res.send({
 		updated: Date.now(),
-		user: req.body.user
+		user: req.user
 	})
 })
 
