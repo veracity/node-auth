@@ -18,9 +18,9 @@ const app = express()
 const { refreshTokenMiddleware } = setupWebAppAuth({
 	app,
 	strategy: { // Fill these in with values from your Application Credential
-		clientId: "0604c4db-9494-4a5a-9301-807be909cecc",
-		clientSecret: "QfT8Q~moTcDAGJcY_ka5YFxv6C5l4p06rjQWMcse",
-		replyUrl: "https://localhost:3000"
+		clientId: "",
+		clientSecret: "",
+		replyUrl: ""
 	},
 	session: {
 		secret: "ce4dd9d9-cac3-4728-a7d7-d3e6157a06d9", // Replace this with your own secret
